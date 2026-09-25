@@ -20,10 +20,12 @@
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "14.2.33",
+    "@nodelib/fs.walk": "^3.0.1",
     "@types/node": "^20.14.9",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
     "autoprefixer": "^10.6.1",
+    "fast-glob": "^3.3.3",
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.4.5"
