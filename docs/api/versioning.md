@@ -1,27 +1,91 @@
-# Versioning Policy - Maison du Délice API
+# Versionado de API
 
-## 1. SemVer (Semantic Versioning)
-Esta API sigue el estándar [SemVer 2.0.0](https://semver.org/):
-- **MAJOR (`v1` -> `v2`):** Cambios incompatibles hacia atrás (breaking changes). Por ejemplo, eliminación de campos requeridos, cambio de endpoints base, o reestructuración incompatible de modelos.
-- **MINOR (`1.0` -> `1.1`):** Nuevos endpoints o atributos opcionales compatibles hacia atrás.
-- **PATCH (`1.0.0` -> `1.0.1`):** Correcciones de bugs, mejoras en descripciones, o ajustes internos sin impacto en el contrato.
+## Estrategia
 
-## 2. Prefijo en URLs
-Todos los endpoints están versionados en la ruta con `/api/v1/`:
-- Desarrollo Local: `http://localhost:4000/api/v1/...`
-- Staging / Prod: `https://api.pasteleria-delice.com/api/v1/...`
+Usamos versionado por URL.
 
-## 3. Contrato como Fuente Única de Verdad
-1. `openapi/fase1.yaml` es la única fuente de verdad para clientes y servidor.
-2. Todo cambio de contrato debe reflejarse en `docs/api/changelog.md` y `openapi/fase1.yaml`.
-3. Los tipos de TypeScript en `packages/shared-types` y `packages/api-client` se generan automáticamente (`npm run generate:types` y `npm run generate:api`).
-4. `apps/web` y `apps/mobile` no crean tipos manuales ni rutas ad-hoc; consumen exclusivamente los tipos generados y `@pasteleria/api-client`.
+La Fase 1 expone:
 
-## 4. Política de Aislamiento Multi-Tenant
-1. Todos los endpoints operativos exigen el header `X-Tenant-ID`.
-2. Las respuestas devuelven siempre el campo `tenant_id` garantizando trazabilidad y validación cruzada.
-3. Se prohíbe exponer datos entre tenants distintos.
+`/api/v1`
 
-## 5. Manejo de Montos Financieros
-1. Todo valor monetario debe expresarse como `NonNegativeDecimalString` con expresión regular `^\d+(\.\d{1,2})?$`.
-2. Se prohíbe el uso de tipos `number` flotantes IEEE-754 para montos en moneda, previniendo errores de redondeo en cálculos contables y costos de receta.
+El contrato OpenAPI vive en:
+
+`openapi/fase1.yaml`
+
+## Reglas de versión
+
+### Patch
+
+Cambios compatibles y menores:
+
+- Corrección de descripciones.
+- Corrección de ejemplos.
+- Corrección de errores tipográficos.
+- Cambios que no afectan clientes.
+
+Ejemplo:
+
+`1.0.0` -> `1.0.1`
+
+### Minor
+
+Cambios compatibles hacia atrás:
+
+- Nuevos endpoints.
+- Nuevos campos opcionales.
+- Nuevos valores en enums, si los clientes pueden tolerarlos.
+- Nuevos query params opcionales.
+
+Ejemplo:
+
+`1.0.x` -> `1.1.0`
+
+### Major
+
+Cambios incompatibles:
+
+- Eliminar endpoints.
+- Eliminar campos.
+- Cambiar tipo de un campo.
+- Hacer obligatorio un campo que antes era opcional.
+- Cambiar semántica de un recurso.
+
+Ejemplo:
+
+`1.x.x` -> `2.0.0`
+
+## Política Fase 1
+
+Durante Fase 1 se evita major.
+
+Si un cambio rompe compatibilidad, se documenta en:
+
+`openapi/CHANGELOG.md`
+
+y se planifica migración a `/api/v2`.
+
+## Tenant
+
+En Fase 1, el tenant se transmite mediante header:
+
+`X-Tenant-ID`
+
+En producción, el backend debe derivar el tenant desde autenticación y membresías.
+
+El cliente nunca debe enviar `tenant_id` en el body de creación.
+
+## Dinero
+
+Los montos se representan como strings decimales con hasta 2 decimales.
+
+Ejemplo:
+
+`"1500.00"`
+
+No se usan números JSON para dinero.
+
+## Errores
+
+Todos los errores usan Problem Details.
+
+Schema: `ProblemDetail` (RFC 7807)
