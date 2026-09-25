@@ -4,15 +4,21 @@ info:
   description: 'Contrato formal OpenAPI 3.1. Módulos: Sistema, Finanzas, Tributario
     (DTE), Egresos con insumos, Bóveda de documentos y Flujo de Producción y Costeo
     (escandallos y órdenes de horneado).'
-  version: 1.0.0
+  version: 1.0.0-fase1
+  license:
+    name: Proprietary
+    url: https://pasteleria-delice.com/licenses/commercial
+  contact:
+    name: Maison du Délice Tech Team
+    email: dev@pasteleria-delice.com
 servers:
-- url: http://localhost:4000/v1
-  description: Servidor de Desarrollo Local
-- url: https://api.pasteleria-delice.com/v1
-  description: Entorno Staging / Producción
+  - url: http://localhost:4000/api/v1
+    description: Servidor de Desarrollo Local
+  - url: https://api.pasteleria-delice.com/api/v1
+    description: Entorno Staging / Producción
 security:
-- BearerAuth: []
-- TenantHeader: []
+  - BearerAuth: []
+  - TenantHeader: []
 components:
   securitySchemes:
     BearerAuth:
@@ -24,24 +30,136 @@ components:
       type: apiKey
       name: X-Tenant-ID
       in: header
-      description: Tenant fallback en desarrollo
+      description: Tenant ID para aislamiento de datos
   parameters:
     TenantIdHeader:
       name: X-Tenant-ID
       in: header
-      required: false
-      description: Identificador de la pastelería/tenant
+      required: true
+      description: Identificador obligatorio de la pastelería/tenant
       schema:
         type: string
         example: default-atelier
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: Clave única de idempotencia para prevenir duplicados en operaciones de creación
+      schema:
+        type: string
+        format: uuid
+        example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+  responses:
+    BadRequestError:
+      description: Solicitud incorrecta o datos inválidos
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    UnauthorizedError:
+      description: No autenticado o token vencido
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    ForbiddenError:
+      description: No autorizado para acceder a este tenant o recurso
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFoundError:
+      description: Recurso no encontrado
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    InternalServerError:
+      description: Error interno del servidor
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
   schemas:
+    NonNegativeDecimalString:
+      type: string
+      pattern: '^\d+(\.\d{1,2})?$'
+      description: Monto monetario no negativo representado como string decimal exacto (hasta 2 decimales) para prevenir errores de precisión flotante.
+      example: '15990.00'
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI de referencia que identifica el tipo de problema (RFC 7807)
+          example: 'about:blank'
+        title:
+          type: string
+          description: Resumen corto y legible del error
+          example: 'Bad Request'
+        status:
+          type: integer
+          description: Código de estado HTTP
+          example: 400
+        detail:
+          type: string
+          description: Explicación detallada del problema específico ocurrido
+          example: 'El asiento contable no está cuadrado: Debe (15000.00) != Haber (14000.00)'
+        instance:
+          type: string
+          description: URI que identifica la ocurrencia específica del problema
+          example: '/api/v1/accounting/journal-entries'
+        invalid_params:
+          type: array
+          description: Detalle de errores por campo cuando aplica validación
+          items:
+            type: object
+            required:
+              - name
+              - reason
+            properties:
+              name:
+                type: string
+                example: 'monto_neto'
+              reason:
+                type: string
+                example: 'Debe coincidir con la expresión ^\\d+(\\.\\d{1,2})?$'
+    PaginationMeta:
+      type: object
+      required:
+        - total
+        - page
+        - page_size
+        - total_pages
+      properties:
+        total:
+          type: integer
+          description: Total de registros disponibles
+          example: 42
+        page:
+          type: integer
+          description: Página actual solicitada
+          example: 1
+        page_size:
+          type: integer
+          description: Elementos por página
+          example: 20
+        total_pages:
+          type: integer
+          description: Cantidad total de páginas
+          example: 3
     HealthResponse:
       type: object
       required:
-      - status
-      - service
-      - timestamp
-      - tenant_id
+        - status
+        - service
+        - timestamp
+        - tenant_id
       properties:
         status:
           type: string
@@ -55,28 +173,15 @@ components:
         tenant_id:
           type: string
           example: default-atelier
-    ErrorResponse:
-      type: object
-      required:
-      - error
-      - message
-      - statusCode
-      properties:
-        error:
-          type: string
-        message:
-          type: string
-        statusCode:
-          type: integer
     Account:
       type: object
       required:
-      - id
-      - tenant_id
-      - codigo
-      - nombre
-      - tipo
-      - activa
+        - id
+        - tenant_id
+        - codigo
+        - nombre
+        - tipo
+        - activa
       properties:
         id:
           type: string
@@ -85,48 +190,62 @@ components:
           type: string
         codigo:
           type: string
-          example: 1.1.01
+          example: '1.1.01'
         nombre:
           type: string
-          example: Caja Chica y Efectivo
+          example: 'Caja Chica y Efectivo'
         tipo:
           type: string
           enum:
-          - activo
-          - pasivo
-          - patrimonio
-          - ingreso
-          - gasto
+            - activo
+            - pasivo
+            - patrimonio
+            - ingreso
+            - gasto
         activa:
           type: boolean
           default: true
     AccountCreateInput:
       type: object
       required:
-      - codigo
-      - nombre
-      - tipo
+        - codigo
+        - nombre
+        - tipo
       properties:
         codigo:
           type: string
+          example: '1.1.01'
         nombre:
           type: string
+          example: 'Caja Chica y Efectivo'
         tipo:
           type: string
           enum:
-          - activo
-          - pasivo
-          - patrimonio
-          - ingreso
-          - gasto
+            - activo
+            - pasivo
+            - patrimonio
+            - ingreso
+            - gasto
+    PaginatedAccounts:
+      type: object
+      required:
+        - items
+        - meta
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     JournalItem:
       type: object
       required:
-      - id
-      - entry_id
-      - account_id
-      - debe
-      - haber
+        - id
+        - entry_id
+        - account_id
+        - debe
+        - haber
       properties:
         id:
           type: string
@@ -138,45 +257,45 @@ components:
           type: string
           format: uuid
         debe:
-          type: number
-          minimum: 0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         haber:
-          type: number
-          minimum: 0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         contacto_rut_o_nombre:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: '76.123.456-7'
     JournalItemInput:
       type: object
       required:
-      - account_id
-      - debe
-      - haber
+        - account_id
+        - debe
+        - haber
       properties:
         account_id:
           type: string
           format: uuid
         debe:
-          type: number
-          minimum: 0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         haber:
-          type: number
-          minimum: 0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         contacto_rut_o_nombre:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: '76.123.456-7'
     JournalEntry:
       type: object
       required:
-      - id
-      - tenant_id
-      - numero_asiento
-      - fecha_asiento
-      - glosa_descripcion
-      - estado
-      - referencia_origen
-      - items
-      - created_at
+        - id
+        - tenant_id
+        - numero_asiento
+        - fecha_asiento
+        - glosa_descripcion
+        - estado
+        - referencia_origen
+        - items
+        - created_at
       properties:
         id:
           type: string
@@ -193,9 +312,9 @@ components:
         estado:
           type: string
           enum:
-          - draft
-          - posted
-          - voided
+            - draft
+            - posted
+            - voided
         referencia_origen:
           type: string
           example: MANUAL
@@ -209,9 +328,9 @@ components:
     JournalEntryCreateInput:
       type: object
       required:
-      - fecha_asiento
-      - glosa_descripcion
-      - items
+        - fecha_asiento
+        - glosa_descripcion
+        - items
       properties:
         fecha_asiento:
           type: string
@@ -226,23 +345,35 @@ components:
           minItems: 2
           items:
             $ref: '#/components/schemas/JournalItemInput'
+    PaginatedJournalEntries:
+      type: object
+      required:
+        - items
+        - meta
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntry'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     DTE:
       type: object
       required:
-      - id
-      - tenant_id
-      - tipo_dte
-      - folio
-      - fecha_emision
-      - emisor_rut
-      - receptor_rut
-      - receptor_razon_social
-      - monto_neto
-      - monto_exento
-      - monto_iva
-      - monto_total
-      - estado_sii
-      - created_at
+        - id
+        - tenant_id
+        - tipo_dte
+        - folio
+        - fecha_emision
+        - emisor_rut
+        - receptor_rut
+        - receptor_razon_social
+        - monto_neto
+        - monto_exento
+        - monto_iva
+        - monto_total
+        - estado_sii
+        - created_at
       properties:
         id:
           type: string
@@ -252,9 +383,9 @@ components:
         tipo_dte:
           type: integer
           enum:
-          - 33
-          - 39
-          - 61
+            - 33
+            - 39
+            - 61
         folio:
           type: integer
         fecha_emision:
@@ -262,95 +393,124 @@ components:
           format: date
         emisor_rut:
           type: string
+          example: '76.999.888-K'
         receptor_rut:
           type: string
+          example: '15.432.123-4'
         receptor_razon_social:
           type: string
+          example: 'Cliente Particular SpA'
         monto_neto:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_exento:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_iva:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_total:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         estado_sii:
           type: string
           enum:
-          - draft
-          - generated
-          - sent_to_sii
-          - accepted_by_sii
-          - rejected_by_sii
+            - draft
+            - generated
+            - sent_to_sii
+            - accepted_by_sii
+            - rejected_by_sii
         track_id_sii:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'TRACK-889911'
         xml_payload_uri:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'vault/dte/33-1024.xml'
         order_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          format: uuid
         created_at:
           type: string
           format: date-time
     DTECreateInput:
       type: object
       required:
-      - tipo_dte
-      - fecha_emision
-      - emisor_rut
-      - receptor_rut
-      - receptor_razon_social
-      - monto_neto
-      - monto_total
+        - tipo_dte
+        - fecha_emision
+        - emisor_rut
+        - receptor_rut
+        - receptor_razon_social
+        - monto_neto
+        - monto_total
       properties:
         tipo_dte:
           type: integer
           enum:
-          - 33
-          - 39
-          - 61
+            - 33
+            - 39
+            - 61
         folio:
-          type: integer
-          nullable: true
+          type:
+            - integer
+            - 'null'
+          example: 1024
         fecha_emision:
           type: string
           format: date
         emisor_rut:
           type: string
+          example: '76.999.888-K'
         receptor_rut:
           type: string
+          example: '15.432.123-4'
         receptor_razon_social:
           type: string
+          example: 'Cliente Particular SpA'
         monto_neto:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_exento:
-          type: number
-          default: 0.0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_iva:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_total:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         order_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          format: uuid
+    PaginatedDtes:
+      type: object
+      required:
+        - items
+        - meta
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DTE'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     ExpenseItemDetail:
       type: object
       required:
-      - id
-      - nombre_insumo
-      - cantidad
-      - unidad_medida
-      - precio_unitario
-      - subtotal
+        - id
+        - nombre_insumo
+        - cantidad
+        - unidad_medida
+        - precio_unitario
+        - subtotal
       properties:
         id:
           type: string
           format: uuid
         ingredient_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          format: uuid
         nombre_insumo:
           type: string
           example: Harina de Trigo Seleccionada
@@ -361,46 +521,49 @@ components:
           type: string
           example: kg
         precio_unitario:
-          type: number
-          example: 1200.0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         subtotal:
-          type: number
-          example: 30000.0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
     ExpenseItemDetailInput:
       type: object
       required:
-      - nombre_insumo
-      - cantidad
-      - unidad_medida
-      - precio_unitario
+        - nombre_insumo
+        - cantidad
+        - unidad_medida
+        - precio_unitario
       properties:
         ingredient_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          format: uuid
         nombre_insumo:
           type: string
+          example: Harina de Trigo Seleccionada
         cantidad:
           type: number
+          example: 25.0
         unidad_medida:
           type: string
+          example: kg
         precio_unitario:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
     Expense:
       type: object
       required:
-      - id
-      - tenant_id
-      - proveedor_nombre
-      - fecha_gasto
-      - monto_neto
-      - monto_iva
-      - monto_total
-      - moneda
-      - categoria_gasto
-      - metodo_pago
-      - estado
-      - created_by_user_id
-      - created_at
+        - id
+        - tenant_id
+        - proveedor_nombre
+        - fecha_gasto
+        - monto_neto
+        - monto_iva
+        - monto_total
+        - moneda
+        - categoria_gasto
+        - metodo_pago
+        - estado
+        - created_by_user_id
+        - created_at
       properties:
         id:
           type: string
@@ -408,112 +571,131 @@ components:
         tenant_id:
           type: string
         folio_comprobante:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'FAC-98442'
         proveedor_nombre:
           type: string
+          example: 'Molinos del Sur SpA'
         proveedor_rut:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: '76.888.777-6'
         fecha_gasto:
           type: string
           format: date
         monto_neto:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_iva:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_total:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         moneda:
           type: string
           default: CLP
+          example: CLP
         categoria_gasto:
           type: string
           enum:
-          - materias_primas
-          - packaging
-          - servicios
-          - arriendo
-          - otros
+            - materias_primas
+            - packaging
+            - servicios
+            - arriendo
+            - otros
         metodo_pago:
           type: string
           enum:
-          - transferencia
-          - efectivo
-          - tarjeta_credito
+            - transferencia
+            - efectivo
+            - tarjeta_credito
         estado:
           type: string
           enum:
-          - draft
-          - pending_approval
-          - approved
-          - rejected
+            - draft
+            - pending_approval
+            - approved
+            - rejected
         document_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          format: uuid
         insumos_detalle:
           type: array
           items:
             $ref: '#/components/schemas/ExpenseItemDetail'
         created_by_user_id:
           type: string
+          example: 'usr_chef_admin'
         approved_by_user_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'usr_owner'
         motivo_rechazo:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'Factura sin detalle fiscal adjunto'
         created_at:
           type: string
           format: date-time
     ExpenseCreateInput:
       type: object
       required:
-      - proveedor_nombre
-      - fecha_gasto
-      - monto_neto
-      - monto_total
+        - proveedor_nombre
+        - fecha_gasto
+        - monto_neto
+        - monto_total
       properties:
         folio_comprobante:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'FAC-98442'
         proveedor_nombre:
           type: string
+          example: 'Molinos del Sur SpA'
         proveedor_rut:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: '76.888.777-6'
         fecha_gasto:
           type: string
           format: date
         monto_neto:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_iva:
-          type: number
-          default: 0.0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         monto_total:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         moneda:
           type: string
           default: CLP
         categoria_gasto:
           type: string
           enum:
-          - materias_primas
-          - packaging
-          - servicios
-          - arriendo
-          - otros
+            - materias_primas
+            - packaging
+            - servicios
+            - arriendo
+            - otros
           default: materias_primas
         metodo_pago:
           type: string
           enum:
-          - transferencia
-          - efectivo
-          - tarjeta_credito
+            - transferencia
+            - efectivo
+            - tarjeta_credito
           default: transferencia
         document_id:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          format: uuid
         insumos_detalle:
           type: array
           items:
@@ -521,22 +703,35 @@ components:
     ExpenseRejectInput:
       type: object
       required:
-      - motivo_rechazo
+        - motivo_rechazo
       properties:
         motivo_rechazo:
           type: string
+          example: 'Comprobante no legible'
+    PaginatedExpenses:
+      type: object
+      required:
+        - items
+        - meta
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Expense'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     DocumentMetadata:
       type: object
       required:
-      - id
-      - tenant_id
-      - filename_original
-      - mime_type
-      - file_size_bytes
-      - storage_uri
-      - checksum_sha256
-      - uploaded_by_user_id
-      - created_at
+        - id
+        - tenant_id
+        - filename_original
+        - mime_type
+        - file_size_bytes
+        - storage_uri
+        - checksum_sha256
+        - uploaded_by_user_id
+        - created_at
       properties:
         id:
           type: string
@@ -545,29 +740,35 @@ components:
           type: string
         filename_original:
           type: string
+          example: 'factura_compra_molino.pdf'
         mime_type:
           type: string
+          example: 'application/pdf'
         file_size_bytes:
           type: integer
+          example: 1048576
         storage_uri:
           type: string
+          example: 'vault/default-atelier/2026/09/factura.pdf'
         checksum_sha256:
           type: string
+          example: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
         uploaded_by_user_id:
           type: string
+          example: 'usr_chef_admin'
         created_at:
           type: string
           format: date-time
     Ingredient:
       type: object
       required:
-      - id
-      - tenant_id
-      - nombre
-      - unidad_medida
-      - costo_unitario_promedio
-      - stock_actual
-      - created_at
+        - id
+        - tenant_id
+        - nombre
+        - unidad_medida
+        - costo_unitario_promedio
+        - stock_actual
+        - created_at
       properties:
         id:
           type: string
@@ -575,22 +776,23 @@ components:
         tenant_id:
           type: string
         codigo:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'ING-MAN-01'
         nombre:
           type: string
           example: Mantequilla Francesa sin sal 82% MG
         unidad_medida:
           type: string
           enum:
-          - kg
-          - g
-          - l
-          - ml
-          - unidad
+            - kg
+            - g
+            - l
+            - ml
+            - unidad
         costo_unitario_promedio:
-          type: number
-          example: 9200.0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         stock_actual:
           type: number
           example: 25.5
@@ -598,31 +800,35 @@ components:
           type: array
           items:
             type: string
+          example: ['Lácteos']
         created_at:
           type: string
           format: date-time
     IngredientCreateInput:
       type: object
       required:
-      - nombre
-      - unidad_medida
-      - costo_unitario_promedio
+        - nombre
+        - unidad_medida
+        - costo_unitario_promedio
       properties:
         codigo:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'ING-MAN-01'
         nombre:
           type: string
+          example: Mantequilla Francesa sin sal 82% MG
         unidad_medida:
           type: string
           enum:
-          - kg
-          - g
-          - l
-          - ml
-          - unidad
+            - kg
+            - g
+            - l
+            - ml
+            - unidad
         costo_unitario_promedio:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         stock_actual:
           type: number
           default: 0.0
@@ -630,72 +836,90 @@ components:
           type: array
           items:
             type: string
+    PaginatedIngredients:
+      type: object
+      required:
+        - items
+        - meta
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     RecipeIngredientItem:
       type: object
       required:
-      - ingredient_id
-      - nombre_ingrediente
-      - cantidad_neta
-      - unidad_medida
-      - porcentaje_merma
-      - costo_calculado
+        - ingredient_id
+        - nombre_ingrediente
+        - cantidad_neta
+        - unidad_medida
+        - porcentaje_merma
+        - costo_calculado
       properties:
         ingredient_id:
           type: string
           format: uuid
         nombre_ingrediente:
           type: string
+          example: 'Mantequilla Francesa 82% MG'
         cantidad_neta:
           type: number
+          example: 0.25
         unidad_medida:
           type: string
+          example: 'kg'
         porcentaje_merma:
           type: number
           example: 5.0
         costo_calculado:
-          type: number
-          example: 2415.0
+          $ref: '#/components/schemas/NonNegativeDecimalString'
     RecipeIngredientItemInput:
       type: object
       required:
-      - ingredient_id
-      - cantidad_neta
+        - ingredient_id
+        - cantidad_neta
       properties:
         ingredient_id:
           type: string
           format: uuid
         cantidad_neta:
           type: number
+          example: 0.25
         porcentaje_merma:
           type: number
           default: 0.0
+          example: 5.0
     RecipePackagingItem:
       type: object
       required:
-      - nombre
-      - costo_unitario
-      - cantidad
+        - nombre
+        - costo_unitario
+        - cantidad
       properties:
         nombre:
           type: string
+          example: 'Caja Premium con cinta de raso'
         costo_unitario:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         cantidad:
           type: number
           default: 1.0
+          example: 1.0
     Recipe:
       type: object
       required:
-      - id
-      - tenant_id
-      - product_id
-      - nombre_receta
-      - rendimiento_porciones
-      - ingredientes
-      - empaques
-      - costo_total_batch
-      - costo_por_porcion
-      - created_at
+        - id
+        - tenant_id
+        - product_id
+        - nombre_receta
+        - rendimiento_porciones
+        - ingredientes
+        - empaques
+        - costo_total_batch
+        - costo_por_porcion
+        - created_at
       properties:
         id:
           type: string
@@ -704,12 +928,16 @@ components:
           type: string
         product_id:
           type: string
+          example: 'prod_opera_01'
         nombre_receta:
           type: string
+          example: 'Ópera Clásica de París 12 Porciones'
         rendimiento_porciones:
           type: number
+          example: 12.0
         tiempo_elaboracion_minutos:
           type: integer
+          example: 90
         ingredientes:
           type: array
           items:
@@ -719,30 +947,35 @@ components:
           items:
             $ref: '#/components/schemas/RecipePackagingItem'
         costo_total_batch:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         costo_por_porcion:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         instrucciones:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'Hornear a 180°C durante 12 minutos.'
         created_at:
           type: string
           format: date-time
     RecipeCreateInput:
       type: object
       required:
-      - product_id
-      - nombre_receta
-      - rendimiento_porciones
-      - ingredientes
+        - product_id
+        - nombre_receta
+        - rendimiento_porciones
+        - ingredientes
       properties:
         product_id:
           type: string
+          example: 'prod_opera_01'
         nombre_receta:
           type: string
+          example: 'Ópera Clásica de París 12 Porciones'
         rendimiento_porciones:
           type: number
           minimum: 1
+          example: 12.0
         tiempo_elaboracion_minutos:
           type: integer
           default: 60
@@ -756,58 +989,76 @@ components:
           items:
             $ref: '#/components/schemas/RecipePackagingItem'
         instrucciones:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'Hornear a 180°C durante 12 minutos.'
+    PaginatedRecipes:
+      type: object
+      required:
+        - items
+        - meta
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipe'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     ProductCostingAnalysis:
       type: object
       required:
-      - product_id
-      - tenant_id
-      - nombre_producto
-      - precio_venta_neto
-      - costo_insumos_porcion
-      - costo_empaque_porcion
-      - costo_total_porcion
-      - margen_bruto_monto
-      - margen_bruto_porcentaje
-      - fecha_calculo
+        - product_id
+        - tenant_id
+        - nombre_producto
+        - precio_venta_neto
+        - costo_insumos_porcion
+        - costo_empaque_porcion
+        - costo_total_porcion
+        - margen_bruto_monto
+        - margen_bruto_porcentaje
+        - fecha_calculo
       properties:
         product_id:
           type: string
+          example: 'prod_opera_01'
         tenant_id:
           type: string
         nombre_producto:
           type: string
+          example: 'Torta Ópera 12 Porciones'
         precio_venta_neto:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         costo_insumos_porcion:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         costo_empaque_porcion:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         costo_total_porcion:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         margen_bruto_monto:
-          type: number
+          $ref: '#/components/schemas/NonNegativeDecimalString'
         margen_bruto_porcentaje:
           type: number
+          example: 62.5
         alerta_margen_bajo:
           type: boolean
+          example: false
         fecha_calculo:
           type: string
           format: date-time
     ProductionOrder:
       type: object
       required:
-      - id
-      - tenant_id
-      - numero_orden
-      - recipe_id
-      - product_id
-      - cantidad_a_elaborar
-      - estado
-      - fecha_programada
-      - inventario_descontado
-      - created_at
+        - id
+        - tenant_id
+        - numero_orden
+        - recipe_id
+        - product_id
+        - cantidad_a_elaborar
+        - estado
+        - fecha_programada
+        - inventario_descontado
+        - created_at
       properties:
         id:
           type: string
@@ -816,45 +1067,54 @@ components:
           type: string
         numero_orden:
           type: string
+          example: 'ORD-2026-001'
         recipe_id:
           type: string
           format: uuid
         product_id:
           type: string
+          example: 'prod_opera_01'
         cantidad_a_elaborar:
           type: integer
+          example: 4
         estado:
           type: string
           enum:
-          - scheduled
-          - in_prep
-          - baking
-          - finished
-          - cancelled
+            - scheduled
+            - in_prep
+            - baking
+            - finished
+            - cancelled
         fecha_programada:
           type: string
           format: date
         fecha_finalizada:
-          type: string
+          type:
+            - string
+            - 'null'
           format: date-time
-          nullable: true
         responsable_chef:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'Chef Pierre'
         inventario_descontado:
           type: boolean
+          example: true
         notas:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'Decoración con pan de oro comestible'
         created_at:
           type: string
           format: date-time
     ProductionOrderCreateInput:
       type: object
       required:
-      - recipe_id
-      - cantidad_a_elaborar
-      - fecha_programada
+        - recipe_id
+        - cantidad_a_elaborar
+        - fecha_programada
       properties:
         recipe_id:
           type: string
@@ -862,25 +1122,42 @@ components:
         cantidad_a_elaborar:
           type: integer
           minimum: 1
+          example: 4
         fecha_programada:
           type: string
           format: date
         responsable_chef:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'Chef Pierre'
         descontar_inventario_inmediato:
           type: boolean
           default: true
         notas:
-          type: string
-          nullable: true
+          type:
+            - string
+            - 'null'
+          example: 'Decoración con pan de oro'
+    PaginatedProductionOrders:
+      type: object
+      required:
+        - items
+        - meta
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductionOrder'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
 paths:
-  /health:
+  /api/v1/health:
     get:
-      summary: Health check del servicio
+      summary: Health check del servicio y tenant activo
       operationId: healthCheck
       tags:
-      - Sistema
+        - Sistema
       security: []
       responses:
         '200':
@@ -889,30 +1166,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
-  /accounting/accounts:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounting/accounts:
     get:
-      summary: Listar cuentas contables
+      summary: Listar cuentas contables paginadas
       operationId: listAccountingAccounts
       tags:
-      - Finanzas
+        - Finanzas
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
       responses:
         '200':
-          description: Lista de cuentas
+          description: Lista paginada de cuentas contables
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Account'
+                $ref: '#/components/schemas/PaginatedAccounts'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       summary: Crear cuenta contable
       operationId: createAccountingAccount
       tags:
-      - Finanzas
+        - Finanzas
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -926,14 +1226,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Account'
-  /accounting/accounts/seed-default:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounting/accounts/seed-default:
     post:
-      summary: Inicializar plan de cuentas chileno
+      summary: Inicializar plan de cuentas chileno por defecto
       operationId: seedDefaultAccountingAccounts
       tags:
-      - Finanzas
+        - Finanzas
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       responses:
         '200':
           description: Cuentas inicializadas
@@ -943,51 +1252,78 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Account'
-  /accounting/journal-entries:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounting/journal-entries:
     get:
-      summary: Listar asientos de diario
+      summary: Listar asientos de diario paginados
       operationId: listJournalEntries
       tags:
-      - Finanzas
+        - Finanzas
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: estado
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - draft
-          - posted
-          - voided
-      - name: fechaDesde
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date
-      - name: fechaHasta
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - draft
+              - posted
+              - voided
+        - name: fechaDesde
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: fechaHasta
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: Lista de asientos
+          description: Lista paginada de asientos
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/JournalEntry'
+                $ref: '#/components/schemas/PaginatedJournalEntries'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
-      summary: Crear asiento contable en draft
+      summary: Crear asiento contable en borrador (requiere balance Debe = Haber)
       operationId: createJournalEntry
       tags:
-      - Finanzas
+        - Finanzas
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1002,24 +1338,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/JournalEntry'
         '400':
-          description: Error partida doble
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /accounting/journal-entries/{id}/post:
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounting/journal-entries/{id}/post:
     post:
-      summary: Publicar y asentar definitivamente un asiento (Debe = Haber)
+      summary: Publicar y asentar definitivamente un asiento contable
       operationId: postJournalEntry
       tags:
-      - Finanzas
+        - Finanzas
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Asiento contabilizado
@@ -1027,19 +1367,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JournalEntry'
-  /accounting/journal-entries/{id}/void:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/accounting/journal-entries/{id}/void:
     post:
       summary: Anular asiento contable
       operationId: voidJournalEntry
       tags:
-      - Finanzas
+        - Finanzas
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Asiento anulado
@@ -1047,50 +1399,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JournalEntry'
-  /invoicing/dte:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/invoicing/dte:
     get:
-      summary: Listar DTEs emitidos
+      summary: Listar DTEs emitidos paginados
       operationId: listDtes
       tags:
-      - Tributario
+        - Tributario
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: tipoDte
-        in: query
-        required: false
-        schema:
-          type: integer
-          enum:
-          - 33
-          - 39
-          - 61
-      - name: estadoSii
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - draft
-          - generated
-          - sent_to_sii
-          - accepted_by_sii
-          - rejected_by_sii
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: tipoDte
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum:
+              - 33
+              - 39
+              - 61
+        - name: estadoSii
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - draft
+              - generated
+              - sent_to_sii
+              - accepted_by_sii
+              - rejected_by_sii
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
           description: Listado de DTEs
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DTE'
+                $ref: '#/components/schemas/PaginatedDtes'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
-      summary: Crear DTE interno
+      summary: Crear documento tributario electrónico DTE
       operationId: createDte
       tags:
-      - Tributario
+        - Tributario
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1104,65 +1485,104 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DTE'
-  /invoicing/dte/{id}/emit:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/invoicing/dte/{id}/emit:
     post:
       summary: Transmitir DTE al SII
       operationId: emitDte
       tags:
-      - Tributario
+        - Tributario
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
-          description: DTE emitido
+          description: DTE transmitido
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DTE'
-  /expenses:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/expenses:
     get:
-      summary: Listar gastos
+      summary: Listar gastos paginados
       operationId: listExpenses
       tags:
-      - Egresos
+        - Egresos
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: estado
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - draft
-          - pending_approval
-          - approved
-          - rejected
-      - name: categoria
-        in: query
-        required: false
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - draft
+              - pending_approval
+              - approved
+              - rejected
+        - name: categoria
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: Lista de gastos
+          description: Lista paginada de gastos
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Expense'
+                $ref: '#/components/schemas/PaginatedExpenses'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       summary: Crear gasto con desglose de insumos
       operationId: createExpense
       tags:
-      - Egresos
+        - Egresos
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1176,19 +1596,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Expense'
-  /expenses/{id}:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/expenses/{id}:
     get:
-      summary: Detalle del gasto e insumos
+      summary: Detalle del gasto e insumos asociados
       operationId: getExpenseById
       tags:
-      - Egresos
+        - Egresos
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Detalle del gasto
@@ -1196,19 +1625,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Expense'
-  /expenses/{id}/approve:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/expenses/{id}/approve:
     post:
-      summary: Aprobar gasto
+      summary: Aprobar gasto e impactar inventario (PPP)
       operationId: approveExpense
       tags:
-      - Egresos
+        - Egresos
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Gasto aprobado
@@ -1216,19 +1657,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Expense'
-  /expenses/{id}/reject:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/expenses/{id}/reject:
     post:
       summary: Rechazar gasto
       operationId: rejectExpense
       tags:
-      - Egresos
+        - Egresos
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -1242,14 +1695,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Expense'
-  /documents/upload:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/documents/upload:
     post:
       summary: Subir factura, boleta o comprobante a la bóveda multi-tenant
       operationId: uploadDocument
       tags:
-      - Bóveda
+        - Bóveda
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
       requestBody:
         required: true
         content:
@@ -1257,7 +1720,7 @@ paths:
             schema:
               type: object
               required:
-              - file
+                - file
               properties:
                 file:
                   type: string
@@ -1271,24 +1734,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/DocumentMetadata'
         '400':
-          description: Error formato o tamaño
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /documents/{id}:
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/documents/{id}:
     get:
-      summary: Metadatos del documento
+      summary: Metadatos del documento en bóveda
       operationId: getDocumentMetadata
       tags:
-      - Bóveda
+        - Bóveda
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Metadata obtenida
@@ -1296,19 +1762,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DocumentMetadata'
-  /documents/{id}/download:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/documents/{id}/download:
     get:
       summary: Descargar binario físico del documento
       operationId: downloadDocument
       tags:
-      - Bóveda
+        - Bóveda
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Flujo binario
@@ -1317,35 +1794,64 @@ paths:
               schema:
                 type: string
                 format: binary
-  /inventory/ingredients:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/inventory/ingredients:
     get:
-      summary: Listar insumos
+      summary: Listar insumos paginados
       operationId: listIngredients
       tags:
-      - Producción y Costeo
+        - Producción y Costeo
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: search
-        in: query
-        required: false
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
       responses:
         '200':
-          description: Lista de insumos
+          description: Lista paginada de insumos
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Ingredient'
+                $ref: '#/components/schemas/PaginatedIngredients'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       summary: Crear insumo
       operationId: createIngredient
       tags:
-      - Producción y Costeo
+        - Producción y Costeo
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1359,35 +1865,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Ingredient'
-  /production/recipes:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/production/recipes:
     get:
-      summary: Listar escandallos
+      summary: Listar escandallos y fichas técnicas
       operationId: listRecipes
       tags:
-      - Producción y Costeo
+        - Producción y Costeo
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: productId
-        in: query
-        required: false
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: productId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: Lista de recetas
+          description: Lista paginada de recetas
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Recipe'
+                $ref: '#/components/schemas/PaginatedRecipes'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
-      summary: Crear escandallo
+      summary: Crear escandallo / ficha técnica
       operationId: createRecipe
       tags:
-      - Producción y Costeo
+        - Producción y Costeo
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1401,61 +1934,98 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Recipe'
-  /production/costing/{productId}:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/production/costing/{productId}:
     get:
-      summary: Cálculo de costo y margen bruto
+      summary: Cálculo de costo de producción y margen bruto en tiempo real
       operationId: getProductCosting
       tags:
-      - Producción y Costeo
+        - Producción y Costeo
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: productId
-        in: path
-        required: true
-        schema:
-          type: string
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Análisis de costeo
+          description: Análisis de costeo y margen bruto
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductCostingAnalysis'
-  /production/orders:
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/production/orders:
     get:
-      summary: Listar órdenes de horneado
+      summary: Listar órdenes de horneado paginadas
       operationId: listProductionOrders
       tags:
-      - Producción y Costeo
+        - Producción y Costeo
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
-      - name: estado
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - scheduled
-          - in_prep
-          - baking
-          - finished
-          - cancelled
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - scheduled
+              - in_prep
+              - baking
+              - finished
+              - cancelled
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: Órdenes de producción
+          description: Lista paginada de órdenes de producción
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductionOrder'
+                $ref: '#/components/schemas/PaginatedProductionOrders'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       summary: Crear orden de horneado con descuento de inventario
       operationId: createProductionOrder
       tags:
-      - Producción y Costeo
+        - Producción y Costeo
       parameters:
-      - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1464,8 +2034,16 @@ paths:
               $ref: '#/components/schemas/ProductionOrderCreateInput'
       responses:
         '201':
-          description: Orden creada
+          description: Orden de producción creada
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductionOrder'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'

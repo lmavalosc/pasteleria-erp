@@ -4,14 +4,14 @@
  */
 
 export interface paths {
-    "/health": {
+    "/api/v1/health": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Health check del servicio */
+        /** Health check del servicio y tenant activo */
         get: operations["healthCheck"];
         put?: never;
         post?: never;
@@ -21,14 +21,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/accounting/accounts": {
+    "/api/v1/accounting/accounts": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar cuentas contables */
+        /** Listar cuentas contables paginadas */
         get: operations["listAccountingAccounts"];
         put?: never;
         /** Crear cuenta contable */
@@ -39,7 +39,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/accounting/accounts/seed-default": {
+    "/api/v1/accounting/accounts/seed-default": {
         parameters: {
             query?: never;
             header?: never;
@@ -48,7 +48,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Inicializar plan de cuentas chileno */
+        /** Inicializar plan de cuentas chileno por defecto */
         post: operations["seedDefaultAccountingAccounts"];
         delete?: never;
         options?: never;
@@ -56,17 +56,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/accounting/journal-entries": {
+    "/api/v1/accounting/journal-entries": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar asientos de diario */
+        /** Listar asientos de diario paginados */
         get: operations["listJournalEntries"];
         put?: never;
-        /** Crear asiento contable en draft */
+        /** Crear asiento contable en borrador (requiere balance Debe = Haber) */
         post: operations["createJournalEntry"];
         delete?: never;
         options?: never;
@@ -74,7 +74,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/accounting/journal-entries/{id}/post": {
+    "/api/v1/accounting/journal-entries/{id}/post": {
         parameters: {
             query?: never;
             header?: never;
@@ -83,7 +83,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publicar y asentar definitivamente un asiento (Debe = Haber) */
+        /** Publicar y asentar definitivamente un asiento contable */
         post: operations["postJournalEntry"];
         delete?: never;
         options?: never;
@@ -91,7 +91,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/accounting/journal-entries/{id}/void": {
+    "/api/v1/accounting/journal-entries/{id}/void": {
         parameters: {
             query?: never;
             header?: never;
@@ -108,17 +108,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/invoicing/dte": {
+    "/api/v1/invoicing/dte": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar DTEs emitidos */
+        /** Listar DTEs emitidos paginados */
         get: operations["listDtes"];
         put?: never;
-        /** Crear DTE interno */
+        /** Crear documento tributario electrónico DTE */
         post: operations["createDte"];
         delete?: never;
         options?: never;
@@ -126,7 +126,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/invoicing/dte/{id}/emit": {
+    "/api/v1/invoicing/dte/{id}/emit": {
         parameters: {
             query?: never;
             header?: never;
@@ -143,14 +143,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/expenses": {
+    "/api/v1/expenses": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar gastos */
+        /** Listar gastos paginados */
         get: operations["listExpenses"];
         put?: never;
         /** Crear gasto con desglose de insumos */
@@ -161,14 +161,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/expenses/{id}": {
+    "/api/v1/expenses/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Detalle del gasto e insumos */
+        /** Detalle del gasto e insumos asociados */
         get: operations["getExpenseById"];
         put?: never;
         post?: never;
@@ -178,7 +178,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/expenses/{id}/approve": {
+    "/api/v1/expenses/{id}/approve": {
         parameters: {
             query?: never;
             header?: never;
@@ -187,7 +187,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Aprobar gasto */
+        /** Aprobar gasto e impactar inventario (PPP) */
         post: operations["approveExpense"];
         delete?: never;
         options?: never;
@@ -195,7 +195,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/expenses/{id}/reject": {
+    "/api/v1/expenses/{id}/reject": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/documents/upload": {
+    "/api/v1/documents/upload": {
         parameters: {
             query?: never;
             header?: never;
@@ -229,14 +229,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/documents/{id}": {
+    "/api/v1/documents/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Metadatos del documento */
+        /** Metadatos del documento en bóveda */
         get: operations["getDocumentMetadata"];
         put?: never;
         post?: never;
@@ -246,7 +246,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/documents/{id}/download": {
+    "/api/v1/documents/{id}/download": {
         parameters: {
             query?: never;
             header?: never;
@@ -263,14 +263,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/inventory/ingredients": {
+    "/api/v1/inventory/ingredients": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar insumos */
+        /** Listar insumos paginados */
         get: operations["listIngredients"];
         put?: never;
         /** Crear insumo */
@@ -281,17 +281,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/production/recipes": {
+    "/api/v1/production/recipes": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar escandallos */
+        /** Listar escandallos y fichas técnicas */
         get: operations["listRecipes"];
         put?: never;
-        /** Crear escandallo */
+        /** Crear escandallo / ficha técnica */
         post: operations["createRecipe"];
         delete?: never;
         options?: never;
@@ -299,14 +299,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/production/costing/{productId}": {
+    "/api/v1/production/costing/{productId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Cálculo de costo y margen bruto */
+        /** Cálculo de costo de producción y margen bruto en tiempo real */
         get: operations["getProductCosting"];
         put?: never;
         post?: never;
@@ -316,14 +316,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/production/orders": {
+    "/api/v1/production/orders": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar órdenes de horneado */
+        /** Listar órdenes de horneado paginadas */
         get: operations["listProductionOrders"];
         put?: never;
         /** Crear orden de horneado con descuento de inventario */
@@ -338,6 +338,68 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description Monto monetario no negativo representado como string decimal exacto (hasta 2 decimales) para prevenir errores de precisión flotante.
+         * @example 15990.00
+         */
+        NonNegativeDecimalString: string;
+        ProblemDetails: {
+            /**
+             * Format: uri
+             * @description URI de referencia que identifica el tipo de problema (RFC 7807)
+             * @example about:blank
+             */
+            type: string;
+            /**
+             * @description Resumen corto y legible del error
+             * @example Bad Request
+             */
+            title: string;
+            /**
+             * @description Código de estado HTTP
+             * @example 400
+             */
+            status: number;
+            /**
+             * @description Explicación detallada del problema específico ocurrido
+             * @example El asiento contable no está cuadrado: Debe (15000.00) != Haber (14000.00)
+             */
+            detail?: string;
+            /**
+             * @description URI que identifica la ocurrencia específica del problema
+             * @example /api/v1/accounting/journal-entries
+             */
+            instance?: string;
+            /** @description Detalle de errores por campo cuando aplica validación */
+            invalid_params?: {
+                /** @example monto_neto */
+                name: string;
+                /** @example Debe coincidir con la expresión ^\\d+(\\.\\d{1,2})?$ */
+                reason: string;
+            }[];
+        };
+        PaginationMeta: {
+            /**
+             * @description Total de registros disponibles
+             * @example 42
+             */
+            total: number;
+            /**
+             * @description Página actual solicitada
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Elementos por página
+             * @example 20
+             */
+            page_size: number;
+            /**
+             * @description Cantidad total de páginas
+             * @example 3
+             */
+            total_pages: number;
+        };
         HealthResponse: {
             /** @example ok */
             status: string;
@@ -347,11 +409,6 @@ export interface components {
             timestamp: string;
             /** @example default-atelier */
             tenant_id: string;
-        };
-        ErrorResponse: {
-            error: string;
-            message: string;
-            statusCode: number;
         };
         Account: {
             /** Format: uuid */
@@ -367,10 +424,16 @@ export interface components {
             activa: boolean;
         };
         AccountCreateInput: {
+            /** @example 1.1.01 */
             codigo: string;
+            /** @example Caja Chica y Efectivo */
             nombre: string;
             /** @enum {string} */
             tipo: "activo" | "pasivo" | "patrimonio" | "ingreso" | "gasto";
+        };
+        PaginatedAccounts: {
+            items: components["schemas"]["Account"][];
+            meta: components["schemas"]["PaginationMeta"];
         };
         JournalItem: {
             /** Format: uuid */
@@ -379,15 +442,17 @@ export interface components {
             entry_id: string;
             /** Format: uuid */
             account_id: string;
-            debe: number;
-            haber: number;
+            debe: components["schemas"]["NonNegativeDecimalString"];
+            haber: components["schemas"]["NonNegativeDecimalString"];
+            /** @example 76.123.456-7 */
             contacto_rut_o_nombre?: string | null;
         };
         JournalItemInput: {
             /** Format: uuid */
             account_id: string;
-            debe: number;
-            haber: number;
+            debe: components["schemas"]["NonNegativeDecimalString"];
+            haber: components["schemas"]["NonNegativeDecimalString"];
+            /** @example 76.123.456-7 */
             contacto_rut_o_nombre?: string | null;
         };
         JournalEntry: {
@@ -414,6 +479,10 @@ export interface components {
             referencia_origen: string;
             items: components["schemas"]["JournalItemInput"][];
         };
+        PaginatedJournalEntries: {
+            items: components["schemas"]["JournalEntry"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
         DTE: {
             /** Format: uuid */
             id: string;
@@ -423,17 +492,23 @@ export interface components {
             folio: number;
             /** Format: date */
             fecha_emision: string;
+            /** @example 76.999.888-K */
             emisor_rut: string;
+            /** @example 15.432.123-4 */
             receptor_rut: string;
+            /** @example Cliente Particular SpA */
             receptor_razon_social: string;
-            monto_neto: number;
-            monto_exento: number;
-            monto_iva: number;
-            monto_total: number;
+            monto_neto: components["schemas"]["NonNegativeDecimalString"];
+            monto_exento: components["schemas"]["NonNegativeDecimalString"];
+            monto_iva: components["schemas"]["NonNegativeDecimalString"];
+            monto_total: components["schemas"]["NonNegativeDecimalString"];
             /** @enum {string} */
             estado_sii: "draft" | "generated" | "sent_to_sii" | "accepted_by_sii" | "rejected_by_sii";
+            /** @example TRACK-889911 */
             track_id_sii?: string | null;
+            /** @example vault/dte/33-1024.xml */
             xml_payload_uri?: string | null;
+            /** Format: uuid */
             order_id?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -441,22 +516,31 @@ export interface components {
         DTECreateInput: {
             /** @enum {integer} */
             tipo_dte: 33 | 39 | 61;
+            /** @example 1024 */
             folio?: number | null;
             /** Format: date */
             fecha_emision: string;
+            /** @example 76.999.888-K */
             emisor_rut: string;
+            /** @example 15.432.123-4 */
             receptor_rut: string;
+            /** @example Cliente Particular SpA */
             receptor_razon_social: string;
-            monto_neto: number;
-            /** @default 0 */
-            monto_exento: number;
-            monto_iva?: number;
-            monto_total: number;
+            monto_neto: components["schemas"]["NonNegativeDecimalString"];
+            monto_exento?: components["schemas"]["NonNegativeDecimalString"];
+            monto_iva?: components["schemas"]["NonNegativeDecimalString"];
+            monto_total: components["schemas"]["NonNegativeDecimalString"];
+            /** Format: uuid */
             order_id?: string | null;
+        };
+        PaginatedDtes: {
+            items: components["schemas"]["DTE"][];
+            meta: components["schemas"]["PaginationMeta"];
         };
         ExpenseItemDetail: {
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
             ingredient_id?: string | null;
             /** @example Harina de Trigo Seleccionada */
             nombre_insumo: string;
@@ -464,31 +548,39 @@ export interface components {
             cantidad: number;
             /** @example kg */
             unidad_medida: string;
-            /** @example 1200 */
-            precio_unitario: number;
-            /** @example 30000 */
-            subtotal: number;
+            precio_unitario: components["schemas"]["NonNegativeDecimalString"];
+            subtotal: components["schemas"]["NonNegativeDecimalString"];
         };
         ExpenseItemDetailInput: {
+            /** Format: uuid */
             ingredient_id?: string | null;
+            /** @example Harina de Trigo Seleccionada */
             nombre_insumo: string;
+            /** @example 25 */
             cantidad: number;
+            /** @example kg */
             unidad_medida: string;
-            precio_unitario: number;
+            precio_unitario: components["schemas"]["NonNegativeDecimalString"];
         };
         Expense: {
             /** Format: uuid */
             id: string;
             tenant_id: string;
+            /** @example FAC-98442 */
             folio_comprobante?: string | null;
+            /** @example Molinos del Sur SpA */
             proveedor_nombre: string;
+            /** @example 76.888.777-6 */
             proveedor_rut?: string | null;
             /** Format: date */
             fecha_gasto: string;
-            monto_neto: number;
-            monto_iva: number;
-            monto_total: number;
-            /** @default CLP */
+            monto_neto: components["schemas"]["NonNegativeDecimalString"];
+            monto_iva: components["schemas"]["NonNegativeDecimalString"];
+            monto_total: components["schemas"]["NonNegativeDecimalString"];
+            /**
+             * @default CLP
+             * @example CLP
+             */
             moneda: string;
             /** @enum {string} */
             categoria_gasto: "materias_primas" | "packaging" | "servicios" | "arriendo" | "otros";
@@ -496,24 +588,30 @@ export interface components {
             metodo_pago: "transferencia" | "efectivo" | "tarjeta_credito";
             /** @enum {string} */
             estado: "draft" | "pending_approval" | "approved" | "rejected";
+            /** Format: uuid */
             document_id?: string | null;
             insumos_detalle?: components["schemas"]["ExpenseItemDetail"][];
+            /** @example usr_chef_admin */
             created_by_user_id: string;
+            /** @example usr_owner */
             approved_by_user_id?: string | null;
+            /** @example Factura sin detalle fiscal adjunto */
             motivo_rechazo?: string | null;
             /** Format: date-time */
             created_at: string;
         };
         ExpenseCreateInput: {
+            /** @example FAC-98442 */
             folio_comprobante?: string | null;
+            /** @example Molinos del Sur SpA */
             proveedor_nombre: string;
+            /** @example 76.888.777-6 */
             proveedor_rut?: string | null;
             /** Format: date */
             fecha_gasto: string;
-            monto_neto: number;
-            /** @default 0 */
-            monto_iva: number;
-            monto_total: number;
+            monto_neto: components["schemas"]["NonNegativeDecimalString"];
+            monto_iva?: components["schemas"]["NonNegativeDecimalString"];
+            monto_total: components["schemas"]["NonNegativeDecimalString"];
             /** @default CLP */
             moneda: string;
             /**
@@ -526,21 +624,33 @@ export interface components {
              * @enum {string}
              */
             metodo_pago: "transferencia" | "efectivo" | "tarjeta_credito";
+            /** Format: uuid */
             document_id?: string | null;
             insumos_detalle?: components["schemas"]["ExpenseItemDetailInput"][];
         };
         ExpenseRejectInput: {
+            /** @example Comprobante no legible */
             motivo_rechazo: string;
+        };
+        PaginatedExpenses: {
+            items: components["schemas"]["Expense"][];
+            meta: components["schemas"]["PaginationMeta"];
         };
         DocumentMetadata: {
             /** Format: uuid */
             id: string;
             tenant_id: string;
+            /** @example factura_compra_molino.pdf */
             filename_original: string;
+            /** @example application/pdf */
             mime_type: string;
+            /** @example 1048576 */
             file_size_bytes: number;
+            /** @example vault/default-atelier/2026/09/factura.pdf */
             storage_uri: string;
+            /** @example e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 */
             checksum_sha256: string;
+            /** @example usr_chef_admin */
             uploaded_by_user_id: string;
             /** Format: date-time */
             created_at: string;
@@ -549,89 +659,127 @@ export interface components {
             /** Format: uuid */
             id: string;
             tenant_id: string;
+            /** @example ING-MAN-01 */
             codigo?: string | null;
             /** @example Mantequilla Francesa sin sal 82% MG */
             nombre: string;
             /** @enum {string} */
             unidad_medida: "kg" | "g" | "l" | "ml" | "unidad";
-            /** @example 9200 */
-            costo_unitario_promedio: number;
+            costo_unitario_promedio: components["schemas"]["NonNegativeDecimalString"];
             /** @example 25.5 */
             stock_actual: number;
+            /**
+             * @example [
+             *       "Lácteos"
+             *     ]
+             */
             alergenos?: string[];
             /** Format: date-time */
             created_at: string;
         };
         IngredientCreateInput: {
+            /** @example ING-MAN-01 */
             codigo?: string | null;
+            /** @example Mantequilla Francesa sin sal 82% MG */
             nombre: string;
             /** @enum {string} */
             unidad_medida: "kg" | "g" | "l" | "ml" | "unidad";
-            costo_unitario_promedio: number;
+            costo_unitario_promedio: components["schemas"]["NonNegativeDecimalString"];
             /** @default 0 */
             stock_actual: number;
             alergenos?: string[];
         };
+        PaginatedIngredients: {
+            items: components["schemas"]["Ingredient"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
         RecipeIngredientItem: {
             /** Format: uuid */
             ingredient_id: string;
+            /** @example Mantequilla Francesa 82% MG */
             nombre_ingrediente: string;
+            /** @example 0.25 */
             cantidad_neta: number;
+            /** @example kg */
             unidad_medida: string;
             /** @example 5 */
             porcentaje_merma: number;
-            /** @example 2415 */
-            costo_calculado: number;
+            costo_calculado: components["schemas"]["NonNegativeDecimalString"];
         };
         RecipeIngredientItemInput: {
             /** Format: uuid */
             ingredient_id: string;
+            /** @example 0.25 */
             cantidad_neta: number;
-            /** @default 0 */
+            /**
+             * @default 0
+             * @example 5
+             */
             porcentaje_merma: number;
         };
         RecipePackagingItem: {
+            /** @example Caja Premium con cinta de raso */
             nombre: string;
-            costo_unitario: number;
-            /** @default 1 */
+            costo_unitario: components["schemas"]["NonNegativeDecimalString"];
+            /**
+             * @default 1
+             * @example 1
+             */
             cantidad: number;
         };
         Recipe: {
             /** Format: uuid */
             id: string;
             tenant_id: string;
+            /** @example prod_opera_01 */
             product_id: string;
+            /** @example Ópera Clásica de París 12 Porciones */
             nombre_receta: string;
+            /** @example 12 */
             rendimiento_porciones: number;
+            /** @example 90 */
             tiempo_elaboracion_minutos?: number;
             ingredientes: components["schemas"]["RecipeIngredientItem"][];
             empaques: components["schemas"]["RecipePackagingItem"][];
-            costo_total_batch: number;
-            costo_por_porcion: number;
+            costo_total_batch: components["schemas"]["NonNegativeDecimalString"];
+            costo_por_porcion: components["schemas"]["NonNegativeDecimalString"];
+            /** @example Hornear a 180°C durante 12 minutos. */
             instrucciones?: string | null;
             /** Format: date-time */
             created_at: string;
         };
         RecipeCreateInput: {
+            /** @example prod_opera_01 */
             product_id: string;
+            /** @example Ópera Clásica de París 12 Porciones */
             nombre_receta: string;
+            /** @example 12 */
             rendimiento_porciones: number;
             /** @default 60 */
             tiempo_elaboracion_minutos: number;
             ingredientes: components["schemas"]["RecipeIngredientItemInput"][];
             empaques?: components["schemas"]["RecipePackagingItem"][];
+            /** @example Hornear a 180°C durante 12 minutos. */
             instrucciones?: string | null;
         };
+        PaginatedRecipes: {
+            items: components["schemas"]["Recipe"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
         ProductCostingAnalysis: {
+            /** @example prod_opera_01 */
             product_id: string;
             tenant_id: string;
+            /** @example Torta Ópera 12 Porciones */
             nombre_producto: string;
-            precio_venta_neto: number;
-            costo_insumos_porcion: number;
-            costo_empaque_porcion: number;
-            costo_total_porcion: number;
-            margen_bruto_monto: number;
+            precio_venta_neto: components["schemas"]["NonNegativeDecimalString"];
+            costo_insumos_porcion: components["schemas"]["NonNegativeDecimalString"];
+            costo_empaque_porcion: components["schemas"]["NonNegativeDecimalString"];
+            costo_total_porcion: components["schemas"]["NonNegativeDecimalString"];
+            margen_bruto_monto: components["schemas"]["NonNegativeDecimalString"];
+            /** @example 62.5 */
             margen_bruto_porcentaje: number;
+            /** @example false */
             alerta_margen_bajo?: boolean;
             /** Format: date-time */
             fecha_calculo: string;
@@ -640,10 +788,13 @@ export interface components {
             /** Format: uuid */
             id: string;
             tenant_id: string;
+            /** @example ORD-2026-001 */
             numero_orden: string;
             /** Format: uuid */
             recipe_id: string;
+            /** @example prod_opera_01 */
             product_id: string;
+            /** @example 4 */
             cantidad_a_elaborar: number;
             /** @enum {string} */
             estado: "scheduled" | "in_prep" | "baking" | "finished" | "cancelled";
@@ -651,8 +802,11 @@ export interface components {
             fecha_programada: string;
             /** Format: date-time */
             fecha_finalizada?: string | null;
+            /** @example Chef Pierre */
             responsable_chef?: string | null;
+            /** @example true */
             inventario_descontado: boolean;
+            /** @example Decoración con pan de oro comestible */
             notas?: string | null;
             /** Format: date-time */
             created_at: string;
@@ -660,19 +814,74 @@ export interface components {
         ProductionOrderCreateInput: {
             /** Format: uuid */
             recipe_id: string;
+            /** @example 4 */
             cantidad_a_elaborar: number;
             /** Format: date */
             fecha_programada: string;
+            /** @example Chef Pierre */
             responsable_chef?: string | null;
             /** @default true */
             descontar_inventario_inmediato: boolean;
+            /** @example Decoración con pan de oro */
             notas?: string | null;
         };
+        PaginatedProductionOrders: {
+            items: components["schemas"]["ProductionOrder"][];
+            meta: components["schemas"]["PaginationMeta"];
+        };
     };
-    responses: never;
+    responses: {
+        /** @description Solicitud incorrecta o datos inválidos */
+        BadRequestError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description No autenticado o token vencido */
+        UnauthorizedError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description No autorizado para acceder a este tenant o recurso */
+        ForbiddenError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description Recurso no encontrado */
+        NotFoundError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+        /** @description Error interno del servidor */
+        InternalServerError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetails"];
+            };
+        };
+    };
     parameters: {
-        /** @description Identificador de la pastelería/tenant */
+        /** @description Identificador obligatorio de la pastelería/tenant */
         TenantIdHeader: string;
+        /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+        IdempotencyKeyHeader: string;
     };
     requestBodies: never;
     headers: never;
@@ -698,37 +907,48 @@ export interface operations {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listAccountingAccounts: {
         parameters: {
-            query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Lista de cuentas */
+            /** @description Lista paginada de cuentas contables */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Account"][];
+                    "application/json": components["schemas"]["PaginatedAccounts"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createAccountingAccount: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -748,14 +968,20 @@ export interface operations {
                     "application/json": components["schemas"]["Account"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     seedDefaultAccountingAccounts: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -771,6 +997,10 @@ export interface operations {
                     "application/json": components["schemas"]["Account"][];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listJournalEntries: {
@@ -779,33 +1009,41 @@ export interface operations {
                 estado?: "draft" | "posted" | "voided";
                 fechaDesde?: string;
                 fechaHasta?: string;
+                page?: number;
+                page_size?: number;
             };
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Lista de asientos */
+            /** @description Lista paginada de asientos */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["JournalEntry"][];
+                    "application/json": components["schemas"]["PaginatedJournalEntries"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createJournalEntry: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -825,23 +1063,20 @@ export interface operations {
                     "application/json": components["schemas"]["JournalEntry"];
                 };
             };
-            /** @description Error partida doble */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     postJournalEntry: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
                 id: string;
@@ -859,14 +1094,21 @@ export interface operations {
                     "application/json": components["schemas"]["JournalEntry"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     voidJournalEntry: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
                 id: string;
@@ -884,6 +1126,11 @@ export interface operations {
                     "application/json": components["schemas"]["JournalEntry"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listDtes: {
@@ -891,10 +1138,12 @@ export interface operations {
             query?: {
                 tipoDte?: 33 | 39 | 61;
                 estadoSii?: "draft" | "generated" | "sent_to_sii" | "accepted_by_sii" | "rejected_by_sii";
+                page?: number;
+                page_size?: number;
             };
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
@@ -907,17 +1156,23 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DTE"][];
+                    "application/json": components["schemas"]["PaginatedDtes"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createDte: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -937,14 +1192,20 @@ export interface operations {
                     "application/json": components["schemas"]["DTE"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     emitDte: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
                 id: string;
@@ -953,7 +1214,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description DTE emitido */
+            /** @description DTE transmitido */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -962,6 +1223,11 @@ export interface operations {
                     "application/json": components["schemas"]["DTE"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listExpenses: {
@@ -969,33 +1235,41 @@ export interface operations {
             query?: {
                 estado?: "draft" | "pending_approval" | "approved" | "rejected";
                 categoria?: string;
+                page?: number;
+                page_size?: number;
             };
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Lista de gastos */
+            /** @description Lista paginada de gastos */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Expense"][];
+                    "application/json": components["schemas"]["PaginatedExpenses"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createExpense: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -1015,14 +1289,18 @@ export interface operations {
                     "application/json": components["schemas"]["Expense"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     getExpenseById: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path: {
                 id: string;
@@ -1040,14 +1318,21 @@ export interface operations {
                     "application/json": components["schemas"]["Expense"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     approveExpense: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
                 id: string;
@@ -1065,14 +1350,21 @@ export interface operations {
                     "application/json": components["schemas"]["Expense"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     rejectExpense: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
                 id: string;
@@ -1094,14 +1386,19 @@ export interface operations {
                     "application/json": components["schemas"]["Expense"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     uploadDocument: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
@@ -1127,23 +1424,18 @@ export interface operations {
                     "application/json": components["schemas"]["DocumentMetadata"];
                 };
             };
-            /** @description Error formato o tamaño */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     getDocumentMetadata: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path: {
                 id: string;
@@ -1161,14 +1453,19 @@ export interface operations {
                     "application/json": components["schemas"]["DocumentMetadata"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     downloadDocument: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path: {
                 id: string;
@@ -1186,39 +1483,52 @@ export interface operations {
                     "application/octet-stream": string;
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listIngredients: {
         parameters: {
             query?: {
                 search?: string;
+                page?: number;
+                page_size?: number;
             };
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Lista de insumos */
+            /** @description Lista paginada de insumos */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Ingredient"][];
+                    "application/json": components["schemas"]["PaginatedIngredients"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createIngredient: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -1238,39 +1548,51 @@ export interface operations {
                     "application/json": components["schemas"]["Ingredient"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listRecipes: {
         parameters: {
             query?: {
                 productId?: string;
+                page?: number;
+                page_size?: number;
             };
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Lista de recetas */
+            /** @description Lista paginada de recetas */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Recipe"][];
+                    "application/json": components["schemas"]["PaginatedRecipes"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createRecipe: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -1290,14 +1612,18 @@ export interface operations {
                     "application/json": components["schemas"]["Recipe"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     getProductCosting: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path: {
                 productId: string;
@@ -1306,7 +1632,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Análisis de costeo */
+            /** @description Análisis de costeo y margen bruto */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1315,39 +1641,52 @@ export interface operations {
                     "application/json": components["schemas"]["ProductCostingAnalysis"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listProductionOrders: {
         parameters: {
             query?: {
                 estado?: "scheduled" | "in_prep" | "baking" | "finished" | "cancelled";
+                page?: number;
+                page_size?: number;
             };
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Órdenes de producción */
+            /** @description Lista paginada de órdenes de producción */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProductionOrder"][];
+                    "application/json": components["schemas"]["PaginatedProductionOrders"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createProductionOrder: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Identificador de la pastelería/tenant */
-                "X-Tenant-ID"?: components["parameters"]["TenantIdHeader"];
+            header: {
+                /** @description Identificador obligatorio de la pastelería/tenant */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path?: never;
             cookie?: never;
@@ -1358,7 +1697,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Orden creada */
+            /** @description Orden de producción creada */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -1367,6 +1706,10 @@ export interface operations {
                     "application/json": components["schemas"]["ProductionOrder"];
                 };
             };
+            400: components["responses"]["BadRequestError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            500: components["responses"]["InternalServerError"];
         };
     };
 }

@@ -3,7 +3,7 @@ import { apiClient } from '../lib/api';
 
 async function getHealthStatus() {
   try {
-    const { data, error } = await apiClient.GET('/health');
+    const { data, error } = await apiClient.GET('/api/v1/health');
     if (error || !data) {
       return {
         status: 'error',

@@ -43,29 +43,37 @@ def root():
     }
 
 # 2. Autenticación y Tenants
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(auth.router)
 
 # 3. Finanzas: Cuentas y Asientos
+app.include_router(accounting.router, prefix="/api/v1")
 app.include_router(accounting.router, prefix="/v1")
 app.include_router(accounting.router)
 
 # 4. Tributario: DTE
+app.include_router(invoicing.router, prefix="/api/v1")
 app.include_router(invoicing.router, prefix="/v1")
 app.include_router(invoicing.router)
+app.include_router(dte.router, prefix="/api/v1")
 app.include_router(dte.router)
 
 # 5. Egresos: Gastos con insumos
+app.include_router(expenses.router, prefix="/api/v1")
 app.include_router(expenses.router, prefix="/v1")
 app.include_router(expenses.router)
 
 # 6. Bóveda: Documentos
+app.include_router(documents.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/v1")
 app.include_router(documents.router)
 
-# 7. Flujo de Producción y Costeo (NUEVO)
+# 7. Flujo de Producción y Costeo
+app.include_router(inventory.router, prefix="/api/v1")
 app.include_router(inventory.router, prefix="/v1")
 app.include_router(inventory.router)
 
+app.include_router(production.router, prefix="/api/v1")
 app.include_router(production.router, prefix="/v1")
 app.include_router(production.router)
 

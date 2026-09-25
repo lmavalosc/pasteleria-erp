@@ -34,7 +34,7 @@ export default function App() {
     setLoadingHealth(true);
     setConnectionError(null);
     try {
-      const { data, error } = await apiClient.GET('/health');
+      const { data, error } = await apiClient.GET('/api/v1/health');
       if (error || !data) {
         setConnectionError('El backend no respondió satisfactoriamente');
         setHealth({
