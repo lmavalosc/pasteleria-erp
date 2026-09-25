@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@pasteleria/shared-types": ["packages/shared-types/src"],
+      "@pasteleria/shared-types/*": ["packages/shared-types/src/*"],
+      "@pasteleria/api-client": ["packages/api-client/src"],
+      "@pasteleria/api-client/*": ["packages/api-client/src/*"],
+      "@pasteleria/ui": ["packages/ui/src"],
+      "@pasteleria/ui/*": ["packages/ui/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

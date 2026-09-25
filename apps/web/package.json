@@ -1,0 +1,34 @@
+{
+  "name": "@pasteleria/web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf .next dist .turbo"
+  },
+  "dependencies": {
+    "@pasteleria/api-client": "*",
+    "@pasteleria/shared-types": "*",
+    "@pasteleria/ui": "*",
+    "next": "14.2.33",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@next/swc-wasm-nodejs": "14.2.33",
+    "@types/node": "^20.14.9",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.4.5"
+  },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "^14.2.33"
+  }
+}

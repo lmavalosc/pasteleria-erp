@@ -1,0 +1,35 @@
+{
+  "name": "pasteleria-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo para Pastelería Artesanal con Turborepo, Next.js 14, Expo React Native, OpenAPI Client y UI compartida",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@pasteleria/web",
+    "dev:mobile": "turbo run dev --filter=@pasteleria/mobile",
+    "dev:api": "turbo run dev --filter=@pasteleria/api",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "audit:secrets": "python scripts/check-secrets.py",
+    "type-check": "turbo run type-check",
+    "typecheck": "turbo run type-check",
+    "generate:api": "turbo run generate --filter=@pasteleria/api-client",
+    "generate:types": "node packages/api-client/node_modules/openapi-typescript/bin/cli.js openapi/fase1.yaml -o packages/shared-types/src/openapi.ts",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@turbo/windows-64": "^2.11.4",
+    "turbo": "^2.1.4",
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

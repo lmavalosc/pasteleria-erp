@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Maison du Délice",
+    "slug": "pasteleria-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#FFF9F2",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pasteleria.delice"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#231610"
+      },
+      "package": "com.pasteleria.delice"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

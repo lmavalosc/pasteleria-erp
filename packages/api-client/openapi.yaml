@@ -1,0 +1,497 @@
+openapi: 3.0.3
+info:
+  title: API Pastelería Gourmet & Repostería de Autor
+  description: Especificación OpenAPI para el catálogo, pedidos, pedidos personalizados y autenticación de la pastelería.
+  version: 1.0.0
+servers:
+  - url: https://api.pasteleria-artesanal.com/v1
+    description: Servidor de Producción
+  - url: http://localhost:4000/v1
+    description: Servidor Local de Desarrollo
+
+paths:
+  /products:
+    get:
+      summary: Listar productos del catálogo
+      operationId: getProducts
+      tags:
+        - Products
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+        - name: isGlutenFree
+          in: query
+          schema:
+            type: boolean
+        - name: isVegan
+          in: query
+          schema:
+            type: boolean
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Lista paginada de productos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+                  totalPages:
+                    type: integer
+
+  /products/{id}:
+    get:
+      summary: Obtener producto por ID o slug
+      operationId: getProductById
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalle del producto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Producto no encontrado
+
+  /categories:
+    get:
+      summary: Listar categorías disponibles
+      operationId: getCategories
+      tags:
+        - Categories
+      responses:
+        '200':
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  /orders:
+    get:
+      summary: Listar pedidos del usuario autenticado
+      operationId: getOrders
+      security:
+        - BearerAuth: []
+      tags:
+        - Orders
+      responses:
+        '200':
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+    post:
+      summary: Crear un nuevo pedido
+      operationId: createOrder
+      tags:
+        - Orders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderInput'
+      responses:
+        '201':
+          description: Pedido creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /orders/{id}:
+    get:
+      summary: Obtener estado detallado de un pedido
+      operationId: getOrderById
+      tags:
+        - Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pedido encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /custom-cakes/quote:
+    post:
+      summary: Solicitar cotización de pastel personalizado de autor
+      operationId: requestCustomCakeQuote
+      tags:
+        - CustomCakes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomCakeQuoteInput'
+      responses:
+        '200':
+          description: Cotización preliminar enviada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quoteId:
+                    type: string
+                  estimatedPriceMin:
+                    type: number
+                  estimatedPriceMax:
+                    type: number
+                  message:
+                    type: string
+
+  /auth/login:
+    post:
+      summary: Inicio de sesión de cliente o staff
+      operationId: login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Autenticado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Category:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+        displayOrder:
+          type: integer
+
+    ProductVariant:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - portions
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        portions:
+          type: integer
+        price:
+          type: number
+        weightGrams:
+          type: number
+        sku:
+          type: string
+        isAvailable:
+          type: boolean
+
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - price
+        - categoryId
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        tagline:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        discountedPrice:
+          type: number
+        categoryId:
+          type: string
+        category:
+          $ref: '#/components/schemas/Category'
+        images:
+          type: array
+          items:
+            type: string
+        ingredients:
+          type: array
+          items:
+            type: string
+        allergens:
+          type: array
+          items:
+            type: string
+        isGlutenFree:
+          type: boolean
+        isVegan:
+          type: boolean
+        isCustomizable:
+          type: boolean
+        rating:
+          type: number
+        reviewsCount:
+          type: integer
+        stockStatus:
+          type: string
+          enum: [in_stock, low_stock, out_of_stock, pre_order_only]
+        prepTimeMinutes:
+          type: integer
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariant'
+        featured:
+          type: boolean
+
+    OrderItem:
+      type: object
+      required:
+        - productId
+        - productName
+        - quantity
+        - unitPrice
+        - totalPrice
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        productImage:
+          type: string
+        variantId:
+          type: string
+        variantName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        customMessage:
+          type: string
+
+    Order:
+      type: object
+      required:
+        - id
+        - orderNumber
+        - status
+        - items
+        - total
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        status:
+          type: string
+          enum: [pending, confirmed, in_preparation, ready_for_pickup, out_for_delivery, delivered, cancelled]
+        deliveryType:
+          type: string
+          enum: [pickup, delivery]
+        scheduledDate:
+          type: string
+        scheduledTime:
+          type: string
+        subtotal:
+          type: number
+        tax:
+          type: number
+        deliveryFee:
+          type: number
+        discount:
+          type: number
+        total:
+          type: number
+        paymentStatus:
+          type: string
+          enum: [pending, paid, failed, refunded]
+        paymentMethod:
+          type: string
+        createdAt:
+          type: string
+
+    CreateOrderInput:
+      type: object
+      required:
+        - customerName
+        - customerEmail
+        - deliveryType
+        - scheduledDate
+        - items
+      properties:
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        deliveryType:
+          type: string
+          enum: [pickup, delivery]
+        deliveryAddress:
+          type: object
+        scheduledDate:
+          type: string
+        scheduledTime:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - productId
+              - quantity
+            properties:
+              productId:
+                type: string
+              variantId:
+                type: string
+              quantity:
+                type: integer
+              customMessage:
+                type: string
+        paymentMethod:
+          type: string
+
+    CustomCakeQuoteInput:
+      type: object
+      required:
+        - customerName
+        - customerEmail
+        - eventDate
+        - guestCount
+        - frostingType
+        - spongeType
+      properties:
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        eventDate:
+          type: string
+        guestCount:
+          type: integer
+        frostingType:
+          type: string
+        spongeType:
+          type: string
+        fillingType:
+          type: string
+        themeDescription:
+          type: string
+        notes:
+          type: string
+
+    AuthResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+        user:
+          type: object

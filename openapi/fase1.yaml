@@ -1,0 +1,1471 @@
+openapi: 3.1.0
+info:
+  title: API Pastelería Gourmet & Repostería de Autor - Fase 1
+  description: 'Contrato formal OpenAPI 3.1. Módulos: Sistema, Finanzas, Tributario
+    (DTE), Egresos con insumos, Bóveda de documentos y Flujo de Producción y Costeo
+    (escandallos y órdenes de horneado).'
+  version: 1.0.0
+servers:
+- url: http://localhost:4000/v1
+  description: Servidor de Desarrollo Local
+- url: https://api.pasteleria-delice.com/v1
+  description: Entorno Staging / Producción
+security:
+- BearerAuth: []
+- TenantHeader: []
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT con claims sub, tenant_id y role
+    TenantHeader:
+      type: apiKey
+      name: X-Tenant-ID
+      in: header
+      description: Tenant fallback en desarrollo
+  parameters:
+    TenantIdHeader:
+      name: X-Tenant-ID
+      in: header
+      required: false
+      description: Identificador de la pastelería/tenant
+      schema:
+        type: string
+        example: default-atelier
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+      - status
+      - service
+      - timestamp
+      - tenant_id
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: pasteleria-api-fase1
+        timestamp:
+          type: string
+          format: date-time
+        tenant_id:
+          type: string
+          example: default-atelier
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      - message
+      - statusCode
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
+    Account:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - codigo
+      - nombre
+      - tipo
+      - activa
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        codigo:
+          type: string
+          example: 1.1.01
+        nombre:
+          type: string
+          example: Caja Chica y Efectivo
+        tipo:
+          type: string
+          enum:
+          - activo
+          - pasivo
+          - patrimonio
+          - ingreso
+          - gasto
+        activa:
+          type: boolean
+          default: true
+    AccountCreateInput:
+      type: object
+      required:
+      - codigo
+      - nombre
+      - tipo
+      properties:
+        codigo:
+          type: string
+        nombre:
+          type: string
+        tipo:
+          type: string
+          enum:
+          - activo
+          - pasivo
+          - patrimonio
+          - ingreso
+          - gasto
+    JournalItem:
+      type: object
+      required:
+      - id
+      - entry_id
+      - account_id
+      - debe
+      - haber
+      properties:
+        id:
+          type: string
+          format: uuid
+        entry_id:
+          type: string
+          format: uuid
+        account_id:
+          type: string
+          format: uuid
+        debe:
+          type: number
+          minimum: 0
+        haber:
+          type: number
+          minimum: 0
+        contacto_rut_o_nombre:
+          type: string
+          nullable: true
+    JournalItemInput:
+      type: object
+      required:
+      - account_id
+      - debe
+      - haber
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        debe:
+          type: number
+          minimum: 0
+        haber:
+          type: number
+          minimum: 0
+        contacto_rut_o_nombre:
+          type: string
+          nullable: true
+    JournalEntry:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - numero_asiento
+      - fecha_asiento
+      - glosa_descripcion
+      - estado
+      - referencia_origen
+      - items
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        numero_asiento:
+          type: integer
+        fecha_asiento:
+          type: string
+          format: date
+        glosa_descripcion:
+          type: string
+        estado:
+          type: string
+          enum:
+          - draft
+          - posted
+          - voided
+        referencia_origen:
+          type: string
+          example: MANUAL
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalItem'
+        created_at:
+          type: string
+          format: date-time
+    JournalEntryCreateInput:
+      type: object
+      required:
+      - fecha_asiento
+      - glosa_descripcion
+      - items
+      properties:
+        fecha_asiento:
+          type: string
+          format: date
+        glosa_descripcion:
+          type: string
+        referencia_origen:
+          type: string
+          default: MANUAL
+        items:
+          type: array
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/JournalItemInput'
+    DTE:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - tipo_dte
+      - folio
+      - fecha_emision
+      - emisor_rut
+      - receptor_rut
+      - receptor_razon_social
+      - monto_neto
+      - monto_exento
+      - monto_iva
+      - monto_total
+      - estado_sii
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        tipo_dte:
+          type: integer
+          enum:
+          - 33
+          - 39
+          - 61
+        folio:
+          type: integer
+        fecha_emision:
+          type: string
+          format: date
+        emisor_rut:
+          type: string
+        receptor_rut:
+          type: string
+        receptor_razon_social:
+          type: string
+        monto_neto:
+          type: number
+        monto_exento:
+          type: number
+        monto_iva:
+          type: number
+        monto_total:
+          type: number
+        estado_sii:
+          type: string
+          enum:
+          - draft
+          - generated
+          - sent_to_sii
+          - accepted_by_sii
+          - rejected_by_sii
+        track_id_sii:
+          type: string
+          nullable: true
+        xml_payload_uri:
+          type: string
+          nullable: true
+        order_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    DTECreateInput:
+      type: object
+      required:
+      - tipo_dte
+      - fecha_emision
+      - emisor_rut
+      - receptor_rut
+      - receptor_razon_social
+      - monto_neto
+      - monto_total
+      properties:
+        tipo_dte:
+          type: integer
+          enum:
+          - 33
+          - 39
+          - 61
+        folio:
+          type: integer
+          nullable: true
+        fecha_emision:
+          type: string
+          format: date
+        emisor_rut:
+          type: string
+        receptor_rut:
+          type: string
+        receptor_razon_social:
+          type: string
+        monto_neto:
+          type: number
+        monto_exento:
+          type: number
+          default: 0.0
+        monto_iva:
+          type: number
+        monto_total:
+          type: number
+        order_id:
+          type: string
+          nullable: true
+    ExpenseItemDetail:
+      type: object
+      required:
+      - id
+      - nombre_insumo
+      - cantidad
+      - unidad_medida
+      - precio_unitario
+      - subtotal
+      properties:
+        id:
+          type: string
+          format: uuid
+        ingredient_id:
+          type: string
+          nullable: true
+        nombre_insumo:
+          type: string
+          example: Harina de Trigo Seleccionada
+        cantidad:
+          type: number
+          example: 25.0
+        unidad_medida:
+          type: string
+          example: kg
+        precio_unitario:
+          type: number
+          example: 1200.0
+        subtotal:
+          type: number
+          example: 30000.0
+    ExpenseItemDetailInput:
+      type: object
+      required:
+      - nombre_insumo
+      - cantidad
+      - unidad_medida
+      - precio_unitario
+      properties:
+        ingredient_id:
+          type: string
+          nullable: true
+        nombre_insumo:
+          type: string
+        cantidad:
+          type: number
+        unidad_medida:
+          type: string
+        precio_unitario:
+          type: number
+    Expense:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - proveedor_nombre
+      - fecha_gasto
+      - monto_neto
+      - monto_iva
+      - monto_total
+      - moneda
+      - categoria_gasto
+      - metodo_pago
+      - estado
+      - created_by_user_id
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        folio_comprobante:
+          type: string
+          nullable: true
+        proveedor_nombre:
+          type: string
+        proveedor_rut:
+          type: string
+          nullable: true
+        fecha_gasto:
+          type: string
+          format: date
+        monto_neto:
+          type: number
+        monto_iva:
+          type: number
+        monto_total:
+          type: number
+        moneda:
+          type: string
+          default: CLP
+        categoria_gasto:
+          type: string
+          enum:
+          - materias_primas
+          - packaging
+          - servicios
+          - arriendo
+          - otros
+        metodo_pago:
+          type: string
+          enum:
+          - transferencia
+          - efectivo
+          - tarjeta_credito
+        estado:
+          type: string
+          enum:
+          - draft
+          - pending_approval
+          - approved
+          - rejected
+        document_id:
+          type: string
+          nullable: true
+        insumos_detalle:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpenseItemDetail'
+        created_by_user_id:
+          type: string
+        approved_by_user_id:
+          type: string
+          nullable: true
+        motivo_rechazo:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    ExpenseCreateInput:
+      type: object
+      required:
+      - proveedor_nombre
+      - fecha_gasto
+      - monto_neto
+      - monto_total
+      properties:
+        folio_comprobante:
+          type: string
+          nullable: true
+        proveedor_nombre:
+          type: string
+        proveedor_rut:
+          type: string
+          nullable: true
+        fecha_gasto:
+          type: string
+          format: date
+        monto_neto:
+          type: number
+        monto_iva:
+          type: number
+          default: 0.0
+        monto_total:
+          type: number
+        moneda:
+          type: string
+          default: CLP
+        categoria_gasto:
+          type: string
+          enum:
+          - materias_primas
+          - packaging
+          - servicios
+          - arriendo
+          - otros
+          default: materias_primas
+        metodo_pago:
+          type: string
+          enum:
+          - transferencia
+          - efectivo
+          - tarjeta_credito
+          default: transferencia
+        document_id:
+          type: string
+          nullable: true
+        insumos_detalle:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpenseItemDetailInput'
+    ExpenseRejectInput:
+      type: object
+      required:
+      - motivo_rechazo
+      properties:
+        motivo_rechazo:
+          type: string
+    DocumentMetadata:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - filename_original
+      - mime_type
+      - file_size_bytes
+      - storage_uri
+      - checksum_sha256
+      - uploaded_by_user_id
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        filename_original:
+          type: string
+        mime_type:
+          type: string
+        file_size_bytes:
+          type: integer
+        storage_uri:
+          type: string
+        checksum_sha256:
+          type: string
+        uploaded_by_user_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    Ingredient:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - nombre
+      - unidad_medida
+      - costo_unitario_promedio
+      - stock_actual
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        codigo:
+          type: string
+          nullable: true
+        nombre:
+          type: string
+          example: Mantequilla Francesa sin sal 82% MG
+        unidad_medida:
+          type: string
+          enum:
+          - kg
+          - g
+          - l
+          - ml
+          - unidad
+        costo_unitario_promedio:
+          type: number
+          example: 9200.0
+        stock_actual:
+          type: number
+          example: 25.5
+        alergenos:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+    IngredientCreateInput:
+      type: object
+      required:
+      - nombre
+      - unidad_medida
+      - costo_unitario_promedio
+      properties:
+        codigo:
+          type: string
+          nullable: true
+        nombre:
+          type: string
+        unidad_medida:
+          type: string
+          enum:
+          - kg
+          - g
+          - l
+          - ml
+          - unidad
+        costo_unitario_promedio:
+          type: number
+        stock_actual:
+          type: number
+          default: 0.0
+        alergenos:
+          type: array
+          items:
+            type: string
+    RecipeIngredientItem:
+      type: object
+      required:
+      - ingredient_id
+      - nombre_ingrediente
+      - cantidad_neta
+      - unidad_medida
+      - porcentaje_merma
+      - costo_calculado
+      properties:
+        ingredient_id:
+          type: string
+          format: uuid
+        nombre_ingrediente:
+          type: string
+        cantidad_neta:
+          type: number
+        unidad_medida:
+          type: string
+        porcentaje_merma:
+          type: number
+          example: 5.0
+        costo_calculado:
+          type: number
+          example: 2415.0
+    RecipeIngredientItemInput:
+      type: object
+      required:
+      - ingredient_id
+      - cantidad_neta
+      properties:
+        ingredient_id:
+          type: string
+          format: uuid
+        cantidad_neta:
+          type: number
+        porcentaje_merma:
+          type: number
+          default: 0.0
+    RecipePackagingItem:
+      type: object
+      required:
+      - nombre
+      - costo_unitario
+      - cantidad
+      properties:
+        nombre:
+          type: string
+        costo_unitario:
+          type: number
+        cantidad:
+          type: number
+          default: 1.0
+    Recipe:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - product_id
+      - nombre_receta
+      - rendimiento_porciones
+      - ingredientes
+      - empaques
+      - costo_total_batch
+      - costo_por_porcion
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        product_id:
+          type: string
+        nombre_receta:
+          type: string
+        rendimiento_porciones:
+          type: number
+        tiempo_elaboracion_minutos:
+          type: integer
+        ingredientes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientItem'
+        empaques:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipePackagingItem'
+        costo_total_batch:
+          type: number
+        costo_por_porcion:
+          type: number
+        instrucciones:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    RecipeCreateInput:
+      type: object
+      required:
+      - product_id
+      - nombre_receta
+      - rendimiento_porciones
+      - ingredientes
+      properties:
+        product_id:
+          type: string
+        nombre_receta:
+          type: string
+        rendimiento_porciones:
+          type: number
+          minimum: 1
+        tiempo_elaboracion_minutos:
+          type: integer
+          default: 60
+        ingredientes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RecipeIngredientItemInput'
+        empaques:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipePackagingItem'
+        instrucciones:
+          type: string
+          nullable: true
+    ProductCostingAnalysis:
+      type: object
+      required:
+      - product_id
+      - tenant_id
+      - nombre_producto
+      - precio_venta_neto
+      - costo_insumos_porcion
+      - costo_empaque_porcion
+      - costo_total_porcion
+      - margen_bruto_monto
+      - margen_bruto_porcentaje
+      - fecha_calculo
+      properties:
+        product_id:
+          type: string
+        tenant_id:
+          type: string
+        nombre_producto:
+          type: string
+        precio_venta_neto:
+          type: number
+        costo_insumos_porcion:
+          type: number
+        costo_empaque_porcion:
+          type: number
+        costo_total_porcion:
+          type: number
+        margen_bruto_monto:
+          type: number
+        margen_bruto_porcentaje:
+          type: number
+        alerta_margen_bajo:
+          type: boolean
+        fecha_calculo:
+          type: string
+          format: date-time
+    ProductionOrder:
+      type: object
+      required:
+      - id
+      - tenant_id
+      - numero_orden
+      - recipe_id
+      - product_id
+      - cantidad_a_elaborar
+      - estado
+      - fecha_programada
+      - inventario_descontado
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        numero_orden:
+          type: string
+        recipe_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+        cantidad_a_elaborar:
+          type: integer
+        estado:
+          type: string
+          enum:
+          - scheduled
+          - in_prep
+          - baking
+          - finished
+          - cancelled
+        fecha_programada:
+          type: string
+          format: date
+        fecha_finalizada:
+          type: string
+          format: date-time
+          nullable: true
+        responsable_chef:
+          type: string
+          nullable: true
+        inventario_descontado:
+          type: boolean
+        notas:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    ProductionOrderCreateInput:
+      type: object
+      required:
+      - recipe_id
+      - cantidad_a_elaborar
+      - fecha_programada
+      properties:
+        recipe_id:
+          type: string
+          format: uuid
+        cantidad_a_elaborar:
+          type: integer
+          minimum: 1
+        fecha_programada:
+          type: string
+          format: date
+        responsable_chef:
+          type: string
+          nullable: true
+        descontar_inventario_inmediato:
+          type: boolean
+          default: true
+        notas:
+          type: string
+          nullable: true
+paths:
+  /health:
+    get:
+      summary: Health check del servicio
+      operationId: healthCheck
+      tags:
+      - Sistema
+      security: []
+      responses:
+        '200':
+          description: Estado del backend y tenant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /accounting/accounts:
+    get:
+      summary: Listar cuentas contables
+      operationId: listAccountingAccounts
+      tags:
+      - Finanzas
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Lista de cuentas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+    post:
+      summary: Crear cuenta contable
+      operationId: createAccountingAccount
+      tags:
+      - Finanzas
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateInput'
+      responses:
+        '201':
+          description: Cuenta creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+  /accounting/accounts/seed-default:
+    post:
+      summary: Inicializar plan de cuentas chileno
+      operationId: seedDefaultAccountingAccounts
+      tags:
+      - Finanzas
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Cuentas inicializadas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+  /accounting/journal-entries:
+    get:
+      summary: Listar asientos de diario
+      operationId: listJournalEntries
+      tags:
+      - Finanzas
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: estado
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - draft
+          - posted
+          - voided
+      - name: fechaDesde
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: fechaHasta
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: Lista de asientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JournalEntry'
+    post:
+      summary: Crear asiento contable en draft
+      operationId: createJournalEntry
+      tags:
+      - Finanzas
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalEntryCreateInput'
+      responses:
+        '201':
+          description: Asiento creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+        '400':
+          description: Error partida doble
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /accounting/journal-entries/{id}/post:
+    post:
+      summary: Publicar y asentar definitivamente un asiento (Debe = Haber)
+      operationId: postJournalEntry
+      tags:
+      - Finanzas
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Asiento contabilizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+  /accounting/journal-entries/{id}/void:
+    post:
+      summary: Anular asiento contable
+      operationId: voidJournalEntry
+      tags:
+      - Finanzas
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Asiento anulado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+  /invoicing/dte:
+    get:
+      summary: Listar DTEs emitidos
+      operationId: listDtes
+      tags:
+      - Tributario
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: tipoDte
+        in: query
+        required: false
+        schema:
+          type: integer
+          enum:
+          - 33
+          - 39
+          - 61
+      - name: estadoSii
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - draft
+          - generated
+          - sent_to_sii
+          - accepted_by_sii
+          - rejected_by_sii
+      responses:
+        '200':
+          description: Listado de DTEs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DTE'
+    post:
+      summary: Crear DTE interno
+      operationId: createDte
+      tags:
+      - Tributario
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DTECreateInput'
+      responses:
+        '201':
+          description: DTE creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DTE'
+  /invoicing/dte/{id}/emit:
+    post:
+      summary: Transmitir DTE al SII
+      operationId: emitDte
+      tags:
+      - Tributario
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: DTE emitido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DTE'
+  /expenses:
+    get:
+      summary: Listar gastos
+      operationId: listExpenses
+      tags:
+      - Egresos
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: estado
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - draft
+          - pending_approval
+          - approved
+          - rejected
+      - name: categoria
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Lista de gastos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Expense'
+    post:
+      summary: Crear gasto con desglose de insumos
+      operationId: createExpense
+      tags:
+      - Egresos
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseCreateInput'
+      responses:
+        '201':
+          description: Gasto registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+  /expenses/{id}:
+    get:
+      summary: Detalle del gasto e insumos
+      operationId: getExpenseById
+      tags:
+      - Egresos
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Detalle del gasto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+  /expenses/{id}/approve:
+    post:
+      summary: Aprobar gasto
+      operationId: approveExpense
+      tags:
+      - Egresos
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Gasto aprobado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+  /expenses/{id}/reject:
+    post:
+      summary: Rechazar gasto
+      operationId: rejectExpense
+      tags:
+      - Egresos
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseRejectInput'
+      responses:
+        '200':
+          description: Gasto rechazado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+  /documents/upload:
+    post:
+      summary: Subir factura, boleta o comprobante a la bóveda multi-tenant
+      operationId: uploadDocument
+      tags:
+      - Bóveda
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Archivo PDF, PNG, JPG o WEBP (máx. 10 MB)
+      responses:
+        '201':
+          description: Archivo almacenado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentMetadata'
+        '400':
+          description: Error formato o tamaño
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /documents/{id}:
+    get:
+      summary: Metadatos del documento
+      operationId: getDocumentMetadata
+      tags:
+      - Bóveda
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Metadata obtenida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentMetadata'
+  /documents/{id}/download:
+    get:
+      summary: Descargar binario físico del documento
+      operationId: downloadDocument
+      tags:
+      - Bóveda
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Flujo binario
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /inventory/ingredients:
+    get:
+      summary: Listar insumos
+      operationId: listIngredients
+      tags:
+      - Producción y Costeo
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Lista de insumos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+    post:
+      summary: Crear insumo
+      operationId: createIngredient
+      tags:
+      - Producción y Costeo
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngredientCreateInput'
+      responses:
+        '201':
+          description: Insumo creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+  /production/recipes:
+    get:
+      summary: Listar escandallos
+      operationId: listRecipes
+      tags:
+      - Producción y Costeo
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: productId
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Lista de recetas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+    post:
+      summary: Crear escandallo
+      operationId: createRecipe
+      tags:
+      - Producción y Costeo
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeCreateInput'
+      responses:
+        '201':
+          description: Receta creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+  /production/costing/{productId}:
+    get:
+      summary: Cálculo de costo y margen bruto
+      operationId: getProductCosting
+      tags:
+      - Producción y Costeo
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Análisis de costeo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCostingAnalysis'
+  /production/orders:
+    get:
+      summary: Listar órdenes de horneado
+      operationId: listProductionOrders
+      tags:
+      - Producción y Costeo
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      - name: estado
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - scheduled
+          - in_prep
+          - baking
+          - finished
+          - cancelled
+      responses:
+        '200':
+          description: Órdenes de producción
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductionOrder'
+    post:
+      summary: Crear orden de horneado con descuento de inventario
+      operationId: createProductionOrder
+      tags:
+      - Producción y Costeo
+      parameters:
+      - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductionOrderCreateInput'
+      responses:
+        '201':
+          description: Orden creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductionOrder'

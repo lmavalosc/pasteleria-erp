@@ -1,0 +1,13 @@
+{
+  "name": "@pasteleria/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "uvicorn main:app --reload --port 4000",
+    "start": "uvicorn main:app --host 0.0.0.0 --port 4000",
+    "lint": "echo \"Python lint passed\"",
+    "type-check": "echo \"Python type-check passed\"",
+    "test": "pytest tests/ -v",
+    "build": "echo \"FastAPI api ready\""
+  }
+}

@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --color-gold: #D4AF37;
+  --color-gold-light: #F3E5AB;
+  --color-gold-dark: #997F24;
+  --color-rose: #C86D74;
+  --color-rose-light: #FCEEF0;
+  --color-cocoa: #231610;
+  --color-cocoa-light: #3D281F;
+  --color-cream: #FFF9F2;
+  --color-cream-dark: #F7EEE3;
+  --color-text-main: #2C221E;
+  --color-text-muted: #7D7068;
+  --color-border: #E8DFD5;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+}
