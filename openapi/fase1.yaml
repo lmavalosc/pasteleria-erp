@@ -12,9 +12,9 @@ info:
     name: Maison du Délice Tech Team
     email: dev@pasteleria-delice.com
 servers:
-  - url: http://localhost:4000/api/v1
+  - url: http://localhost:4000
     description: Servidor de Desarrollo Local
-  - url: https://api.pasteleria-delice.com/api/v1
+  - url: https://api.pasteleria-delice.com
     description: Entorno Staging / Producción
 security:
   - BearerAuth: []

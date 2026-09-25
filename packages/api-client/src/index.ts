@@ -9,7 +9,7 @@ export type { paths, components };
  * Cliente OpenAPI tipado basado en openapi-fetch consumiendo los contratos de @pasteleria/shared-types
  */
 export function createFetchClient(
-  baseUrl: string = 'http://localhost:4000/api/v1',
+  baseUrl: string = 'http://localhost:4000',
   defaultHeaders: Record<string, string> = {}
 ): Client<paths> {
   return createClient<paths>({

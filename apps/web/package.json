@@ -31,6 +31,6 @@
     "typescript": "^5.4.5"
   },
   "optionalDependencies": {
-    "@next/swc-win32-x64-msvc": "^14.2.33"
+    "@next/swc-win32-x64-msvc": "14.2.33"
   }
 }

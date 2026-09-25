@@ -3,8 +3,9 @@ import { apiClient } from '../lib/api';
 
 async function getHealthStatus() {
   try {
-    const { data, error } = await apiClient.GET('/api/v1/health');
-    if (error || !data) {
+    const res = await apiClient.GET('/api/v1/health');
+    if (res.error || !res.data) {
+      console.error('Health fetch returned error:', res.error);
       return {
         status: 'error',
         service: 'FastAPI Service',
@@ -12,8 +13,9 @@ async function getHealthStatus() {
         timestamp: new Date().toISOString(),
       };
     }
-    return data;
+    return res.data;
   } catch (err) {
+    console.error('Health fetch exception:', err);
     return {
       status: 'offline',
       service: 'FastAPI Service (Local)',
