@@ -1,18 +1,18 @@
-# Configuración de Redocly CLI y openapi-typescript para el Monorepo Pastelería
-
 apis:
   fase1@v1:
     root: ./openapi/fase1.yaml
     x-openapi-ts:
       output: ./packages/shared-types/src/openapi.ts
 
+extends:
+  - recommended
+
 rules:
-  struct: error
+  operation-4xx-response: off
+  no-server-example.com: off
+  tag-description: off
   info-contact: off
-  info-license: off
-  operation-4xx-response: warn
-  operation-description: off
-  no-unused-components: warn
-  security-defined: error
-  no-ambiguous-paths: error
-  no-identical-paths: error
+  license-url: off
+  operation-operationId-unique: error
+  operation-operationId: error
+  no-$ref-siblings: error
