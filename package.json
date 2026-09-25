@@ -14,13 +14,16 @@
     "dev:mobile": "turbo run dev --filter=@pasteleria/mobile",
     "dev:api": "turbo run dev --filter=@pasteleria/api",
     "lint": "turbo run lint",
-    "lint:openapi": "npx @redocly/cli lint openapi/fase1.yaml",
+    "lint:openapi": "redocly lint openapi/fase1.yaml",
+    "openapi:lint": "redocly lint openapi/fase1.yaml",
+    "openapi:preview": "redocly preview-docs openapi/fase1.yaml",
     "test": "turbo run test",
     "audit:secrets": "python scripts/check-secrets.py",
     "type-check": "turbo run type-check",
     "typecheck": "turbo run type-check",
     "generate:api": "turbo run generate --filter=@pasteleria/api-client",
-    "generate:types": "node packages/api-client/node_modules/openapi-typescript/bin/cli.js openapi/fase1.yaml -o packages/shared-types/src/openapi.ts",
+    "generate:types": "openapi-typescript openapi/fase1.yaml -o packages/shared-types/src/openapi.ts",
+    "generate:types:check": "npm run generate:types && git diff --exit-code packages/shared-types/src/openapi.ts",
     "clean": "turbo run clean"
   },
   "devDependencies": {
