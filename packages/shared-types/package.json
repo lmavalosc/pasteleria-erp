@@ -18,6 +18,7 @@
     "build:bundle": "tsup",
     "lint": "echo \"Shared-types lint passed\"",
     "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "clean": "rimraf dist .turbo"
   },
   "devDependencies": {
