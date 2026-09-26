@@ -23,6 +23,12 @@
     "typecheck": "turbo run type-check",
     "generate:types": "openapi-typescript openapi/fase1.yaml -o packages/shared-types/src/openapi.ts",
     "generate:types:check": "npm run generate:types && git diff --exit-code packages/shared-types/src/openapi.ts",
+    "db:migrate": "npm run --prefix apps/api db:migrate",
+    "db:verify": "npm run --prefix apps/api db:verify",
+    "db:seed": "npm run --prefix apps/api db:seed",
+    "db:test-isolation": "npm run --prefix apps/api db:test-isolation",
+    "db:test-rls": "npm run --prefix apps/api db:test-rls",
+    "db:test-constraints": "npm run --prefix apps/api db:test-constraints",
     "clean": "turbo run clean"
   },
   "devDependencies": {

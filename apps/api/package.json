@@ -8,6 +8,12 @@
     "lint": "echo \"Python lint passed\"",
     "type-check": "echo \"Python type-check passed\"",
     "test": "pytest tests/ -v",
+    "db:migrate": ".\\.venv\\Scripts\\alembic.exe upgrade head",
+    "db:verify": ".\\.venv\\Scripts\\python.exe scripts/verify_schema.py",
+    "db:seed": ".\\.venv\\Scripts\\python.exe scripts/seed_demo.py",
+    "db:test-isolation": ".\\.venv\\Scripts\\python.exe scripts/test_tenant_isolation.py",
+    "db:test-rls": ".\\.venv\\Scripts\\python.exe scripts/test_rls.py",
+    "db:test-constraints": ".\\.venv\\Scripts\\python.exe scripts/test_accounting_constraints.py",
     "build": "echo \"FastAPI api ready\""
   }
 }
