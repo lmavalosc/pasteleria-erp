@@ -1,70 +1,64 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List
-from app.schemas.core_models import (
-    AccountResponse, JournalEntryCreateRequest, JournalEntryResponse,
-    UserRole
+import math
+from typing import Annotated
+from uuid import UUID
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
+from app.api.deps import get_db_with_tenant, get_tenant_id_from_header
+from app.core.pagination import Page, PageParams
+from app.repositories.accounting import AccountingRepository
+from app.schemas.accounting import (
+    AccountCreate,
+    AccountRead,
+    JournalEntryCreate,
+    JournalEntryRead,
 )
-from app.core.deps import get_current_context, require_roles
-from app.services.accounting_service import accounting_store
+from app.services.accounting import AccountingService
 
-router = APIRouter(prefix="/v1/accounting", tags=["accounting"])
+router = APIRouter(prefix="/accounting", tags=["accounting"])
 
-@router.get("/accounts", response_model=List[AccountResponse])
-def get_accounts(
-    context: TenantContext = Depends(get_current_context)
+
+@router.get("/accounts", response_model=list[AccountRead])
+def list_accounts(db: Session = Depends(get_db_with_tenant)):
+    repo = AccountingRepository(db)
+    return repo.list_accounts()
+
+
+@router.post("/accounts", response_model=AccountRead, status_code=status.HTTP_201_CREATED)
+def create_account(
+    data: AccountCreate,
+    tenant_id: UUID = Depends(get_tenant_id_from_header),
+    db: Session = Depends(get_db_with_tenant),
 ):
-    accs = accounting_store.list_accounts(context.tenant_id)
-    return [AccountResponse(**a) for a in accs]
+    service = AccountingService(AccountingRepository(db))
+    return service.create_account(tenant_id, data)
 
-@router.post("/accounts/seed-default", response_model=List[AccountResponse])
-def seed_default_accounts(
-    context: TenantContext = Depends(require_roles([UserRole.OWNER, UserRole.ADMIN, UserRole.ACCOUNTANT]))
-):
-    created = accounting_store.seed_defaults(context.tenant_id)
-    all_accs = accounting_store.list_accounts(context.tenant_id)
-    return [AccountResponse(**a) for a in all_accs]
 
-@router.post("/entries", response_model=JournalEntryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/journal-entries",
+    response_model=JournalEntryRead,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_journal_entry(
-    payload: JournalEntryCreateRequest,
-    context: TenantContext = Depends(require_roles([UserRole.OWNER, UserRole.ADMIN, UserRole.ACCOUNTANT]))
+    data: JournalEntryCreate,
+    tenant_id: UUID = Depends(get_tenant_id_from_header),
+    db: Session = Depends(get_db_with_tenant),
 ):
-    # Verify account IDs belong to tenant
-    for item in payload.items:
-        acc = accounting_store.get_account_by_id(item.account_id, context.tenant_id)
-        if not acc:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"La cuenta contable {item.account_id} no existe en su empresa."
-            )
+    service = AccountingService(AccountingRepository(db))
+    return service.create_journal_entry(tenant_id, data)
 
-    entry = accounting_store.create_entry(context.tenant_id, payload)
-    return JournalEntryResponse(**entry)
 
-@router.post("/entries/{id}/post", response_model=JournalEntryResponse)
-def post_journal_entry(
-    id: str,
-    context: TenantContext = Depends(require_roles([UserRole.OWNER, UserRole.ADMIN, UserRole.ACCOUNTANT]))
+@router.get("/journal-entries", response_model=Page[JournalEntryRead])
+def list_journal_entries(
+    params: Annotated[PageParams, Depends()],
+    db: Session = Depends(get_db_with_tenant),
 ):
-    try:
-        entry = accounting_store.post_entry(id, context.tenant_id)
-        return JournalEntryResponse(**entry)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-
-@router.post("/entries/{id}/void", response_model=JournalEntryResponse)
-def void_journal_entry(
-    id: str,
-    context: TenantContext = Depends(require_roles([UserRole.OWNER, UserRole.ADMIN, UserRole.ACCOUNTANT]))
-):
-    try:
-        entry = accounting_store.void_entry(id, context.tenant_id)
-        return JournalEntryResponse(**entry)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+    repo = AccountingRepository(db)
+    items, total = repo.list_journal_entries_paginated(params.offset, params.page_size)
+    pages = math.ceil(total / params.page_size) if total > 0 else 1
+    return Page(
+        items=items,
+        total=total,
+        page=params.page,
+        page_size=params.page_size,
+        total_pages=pages,
+    )

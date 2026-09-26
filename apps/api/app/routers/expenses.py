@@ -1,92 +1,40 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Query
-from typing import List, Optional
-from app.schemas.core_models import (
-    ExpenseCreateRequest, ExpenseResponse, ExpenseRejectRequest,
-    UserRole
-)
-from app.core.deps import get_current_context, require_roles
-from app.services.expense_service import expense_store
-from app.services.document_service import document_store
+import math
+from typing import Annotated
+from uuid import UUID
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
+from app.api.deps import get_db_with_tenant, get_tenant_id_from_header
+from app.core.pagination import Page, PageParams
+from app.repositories.documents import DocumentRepository
+from app.repositories.expenses import ExpenseRepository
+from app.schemas.expenses import ExpenseCreate, ExpenseRead
+from app.services.expenses import ExpenseService
 
-router = APIRouter(prefix="/v1/expenses", tags=["expenses"])
+router = APIRouter(prefix="/expenses", tags=["expenses"])
 
-@router.post("", response_model=ExpenseResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post("", response_model=ExpenseRead, status_code=status.HTTP_201_CREATED)
 def create_expense(
-    payload: ExpenseCreateRequest,
-    context: TenantContext = Depends(get_current_context)
+    data: ExpenseCreate,
+    tenant_id: UUID = Depends(get_tenant_id_from_header),
+    db: Session = Depends(get_db_with_tenant),
 ):
-    if payload.document_id:
-        doc = document_store.get_by_id(payload.document_id, context.tenant_id)
-        if not doc:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"El documento {payload.document_id} no existe o no pertenece a su empresa."
-            )
+    service = ExpenseService(ExpenseRepository(db), DocumentRepository(db))
+    return service.create_expense(tenant_id, data)
 
-    expense = expense_store.create(
-        tenant_id=context.tenant_id,
-        user_id=context.user_id,
-        data=payload
-    )
-    return ExpenseResponse(**expense)
 
-@router.get("", response_model=List[ExpenseResponse])
+@router.get("", response_model=Page[ExpenseRead])
 def list_expenses(
-    estado: Optional[str] = Query(None, description="Filtrar por estado: draft, pending_approval, approved, rejected"),
-    categoria: Optional[str] = Query(None, description="Filtrar por categoría"),
-    fecha_desde: Optional[str] = Query(None, description="YYYY-MM-DD"),
-    fecha_hasta: Optional[str] = Query(None, description="YYYY-MM-DD"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    context: TenantContext = Depends(get_current_context)
+    params: Annotated[PageParams, Depends()],
+    db: Session = Depends(get_db_with_tenant),
 ):
-    expenses = expense_store.list_expenses(
-        tenant_id=context.tenant_id,
-        estado=estado,
-        categoria=categoria,
-        fecha_desde=fecha_desde,
-        fecha_hasta=fecha_hasta,
-        page=page,
-        page_size=page_size
+    repo = ExpenseRepository(db)
+    items, total = repo.list_paginated(params.offset, params.page_size)
+    pages = math.ceil(total / params.page_size) if total > 0 else 1
+    return Page(
+        items=items,
+        total=total,
+        page=params.page,
+        page_size=params.page_size,
+        total_pages=pages,
     )
-    return [ExpenseResponse(**e) for e in expenses]
-
-@router.get("/{id}", response_model=ExpenseResponse)
-def get_expense(
-    id: str,
-    context: TenantContext = Depends(get_current_context)
-):
-    exp = expense_store.get_by_id(id, context.tenant_id)
-    if not exp:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Gasto no encontrado."
-        )
-    return ExpenseResponse(**exp)
-
-@router.post("/{id}/approve", response_model=ExpenseResponse)
-def approve_expense(
-    id: str,
-    context: TenantContext = Depends(require_roles([UserRole.OWNER, UserRole.ADMIN, UserRole.ACCOUNTANT]))
-):
-    exp = expense_store.approve(id, context.tenant_id, context.user_id)
-    if not exp:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Gasto no encontrado."
-        )
-    return ExpenseResponse(**exp)
-
-@router.post("/{id}/reject", response_model=ExpenseResponse)
-def reject_expense(
-    id: str,
-    payload: ExpenseRejectRequest,
-    context: TenantContext = Depends(require_roles([UserRole.OWNER, UserRole.ADMIN, UserRole.ACCOUNTANT]))
-):
-    exp = expense_store.reject(id, context.tenant_id, context.user_id, payload.motivo_rechazo)
-    if not exp:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Gasto no encontrado."
-        )
-    return ExpenseResponse(**exp)

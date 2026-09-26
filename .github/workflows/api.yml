@@ -1,0 +1,57 @@
+name: API CI
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+
+jobs:
+  backend-checks:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: nucleo
+          POSTGRES_USER: nucleo
+          POSTGRES_PASSWORD: nucleo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: apps/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Apply Alembic Migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://nucleo:nucleo@localhost:5432/nucleo
+        run: alembic upgrade head
+
+      - name: Seed Demo Data
+        env:
+          DATABASE_URL: postgresql+psycopg://nucleo:nucleo@localhost:5432/nucleo
+        run: python scripts/seed_demo.py
+
+      - name: Run Tests
+        env:
+          DATABASE_URL: postgresql+psycopg://nucleo:nucleo@localhost:5432/nucleo
+        run: pytest -v

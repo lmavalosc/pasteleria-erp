@@ -1,20 +1,29 @@
 import os
-from typing import Optional
-from pydantic_settings import BaseSettings
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Maison du Delice - Core API"
+    PROJECT_NAME: str = "Núcleo Contable y DTE API"
     VERSION: str = "1.0.0-fase1"
-    SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "super-secret-production-grade-jwt-key-2026")
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 dias
-    
-    # Storage settings
-    STORAGE_DIR: str = os.getenv("STORAGE_DIR", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "storage_data")))
-    MAX_UPLOAD_SIZE_MB: int = 10
-    
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    API_V1_PREFIX: str = "/api/v1"
+
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql+psycopg://nucleo:nucleo@localhost:5432/nucleo",
+    )
+    STORAGE_DIR: Path = Path("storage/documents")
+
+    # Proveedor SII: "stub" para local/CI, "sii" para producción
+    SII_PROVIDER: str = "stub"
+    SII_ENV: str = "certificacion"  # 'certificacion' o 'produccion'
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
 
 settings = Settings()
+settings.STORAGE_DIR.mkdir(parents=True, exist_ok=True)
