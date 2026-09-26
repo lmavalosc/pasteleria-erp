@@ -1,0 +1,29 @@
+"""Ejemplo de adaptador para integrar conector legacy del SII.
+
+Para habilitar este adaptador en producción:
+1. Renombrar este archivo o importar su lógica en adapter.py
+2. Configurar SII_PROVIDER=sii en .env
+3. Proporcionar certificados y claves mediante variables de entorno seguras (no versionadas)
+"""
+
+from app.integrations.sii.port import SIIClientPort, SIIDtePayload, SIIEmissionResult
+
+
+class LegacySIIConnectorAdapter(SIIClientPort):
+    def __init__(self, cert_path: str | None = None, env: str = "certificacion"):
+        self.cert_path = cert_path
+        self.env = env
+
+    def emit_dte(self, payload: SIIDtePayload) -> SIIEmissionResult:
+        # Aquí se invocaría el conector legacy de firma XML y envío SOAP al SII:
+        # xml_signed = sign_dte_xml(payload, self.cert_path)
+        # response = send_soap_sii(xml_signed, env=self.env)
+        return SIIEmissionResult(
+            track_id=f"TRACK-{payload.dte_type}-{payload.folio}",
+            sii_receipt_uri=f"https://palena.sii.cl/receipts/{payload.folio}",
+            status="pending",
+        )
+
+    def get_track_status(self, track_id: str) -> str:
+        # return query_sii_track_status(track_id)
+        return "accepted"

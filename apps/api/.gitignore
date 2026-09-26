@@ -6,3 +6,7 @@ __pycache__/
 *.pyo
 .pytest_cache/
 storage_data/
+storage/
+var/
+*.pdf
+*.xml
