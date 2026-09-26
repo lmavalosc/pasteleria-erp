@@ -3,22 +3,30 @@ import { apiClient } from '../lib/api';
 
 async function getHealthStatus() {
   try {
-    const res = await apiClient.GET('/api/v1/health');
+    const res = await apiClient.GET('/health');
     if (res.error || !res.data) {
       console.error('Health fetch returned error:', res.error);
       return {
-        status: 'error',
+        status: 'error' as const,
         service: 'FastAPI Service',
+        version: '1.0.0-fase1',
         tenant_id: 'unknown',
         timestamp: new Date().toISOString(),
       };
     }
-    return res.data;
+    return {
+      status: res.data.status,
+      service: res.data.service,
+      version: res.data.version,
+      tenant_id: 'default-atelier',
+      timestamp: new Date().toISOString(),
+    };
   } catch (err) {
     console.error('Health fetch exception:', err);
     return {
-      status: 'offline',
+      status: 'offline' as const,
       service: 'FastAPI Service (Local)',
+      version: '1.0.0-fase1',
       tenant_id: 'default-atelier',
       timestamp: new Date().toISOString(),
     };

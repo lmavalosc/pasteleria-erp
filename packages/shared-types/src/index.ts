@@ -11,52 +11,63 @@ import type { components, paths } from './openapi';
 
 export type Schemas = components['schemas'];
 
-// 1. Sistema, Errores y Tipos Base
+// 1. Tipos Base y Errores
+export type Uuid = Schemas['Uuid'];
+export type DateString = Schemas['Date'];
+export type DateTimeString = Schemas['DateTime'];
+export type DecimalString = Schemas['DecimalString'];
 export type NonNegativeDecimalString = Schemas['NonNegativeDecimalString'];
-export type ProblemDetails = Schemas['ProblemDetails'];
-export type ErrorResponse = ProblemDetails;
-export type PaginationMeta = Schemas['PaginationMeta'];
+export type ProblemDetail = Schemas['ProblemDetail'];
+export type ProblemDetails = Schemas['ProblemDetail'];
+export type ErrorDetail = Schemas['ErrorDetail'];
+export type PageMeta = Schemas['PageMeta'];
+export type Currency = Schemas['Currency'];
+
+// 2. Sistema
 export type HealthResponse = Schemas['HealthResponse'];
 
-// 2. Finanzas y Contabilidad
-export type Account = Schemas['Account'];
-export type AccountCreateInput = Schemas['AccountCreateInput'];
-export type PaginatedAccounts = Schemas['PaginatedAccounts'];
-export type JournalItem = Schemas['JournalItem'];
-export type JournalItemInput = Schemas['JournalItemInput'];
+// 3. Contabilidad
+export type AccountType = Schemas['AccountType'];
+export type AccountingAccount = Schemas['AccountingAccount'];
+export type AccountingAccountCreate = Schemas['AccountingAccountCreate'];
+export type AccountingAccountUpdate = Schemas['AccountingAccountUpdate'];
+export type AccountingAccountPage = Schemas['AccountingAccountPage'];
+
+export type JournalStatus = Schemas['JournalStatus'];
+export type JournalLine = Schemas['JournalLine'];
+export type JournalLineCreate = Schemas['JournalLineCreate'];
 export type JournalEntry = Schemas['JournalEntry'];
-export type JournalEntryCreateInput = Schemas['JournalEntryCreateInput'];
-export type PaginatedJournalEntries = Schemas['PaginatedJournalEntries'];
+export type JournalEntryCreate = Schemas['JournalEntryCreate'];
+export type JournalEntryPage = Schemas['JournalEntryPage'];
 
-// 3. Tributario / DTE
-export type DTE = Schemas['DTE'];
-export type DTECreateInput = Schemas['DTECreateInput'];
-export type PaginatedDtes = Schemas['PaginatedDtes'];
+// 4. Facturación / DTE
+export type DteType = Schemas['DteType'];
+export type DteStatus = Schemas['DteStatus'];
+export type DteInvoice = Schemas['DteInvoice'];
+export type DteInvoiceCreate = Schemas['DteInvoiceCreate'];
+export type DteInvoicePage = Schemas['DteInvoicePage'];
 
-// 4. Egresos con Insumos
+// 5. Gastos
+export type ExpenseStatus = Schemas['ExpenseStatus'];
 export type Expense = Schemas['Expense'];
-export type ExpenseCreateInput = Schemas['ExpenseCreateInput'];
-export type ExpenseRejectInput = Schemas['ExpenseRejectInput'];
-export type ExpenseItemDetail = Schemas['ExpenseItemDetail'];
-export type ExpenseItemDetailInput = Schemas['ExpenseItemDetailInput'];
-export type PaginatedExpenses = Schemas['PaginatedExpenses'];
+export type ExpenseCreate = Schemas['ExpenseCreate'];
+export type ExpenseUpdate = Schemas['ExpenseUpdate'];
+export type ExpensePage = Schemas['ExpensePage'];
 
-// 5. Bóveda de Documentos
-export type DocumentMetadata = Schemas['DocumentMetadata'];
+// 6. Documentos
+export type Document = Schemas['Document'];
+export type DocumentUploadRequest = Schemas['DocumentUploadRequest'];
+export type DocumentPage = Schemas['DocumentPage'];
 
-// 6. Flujo de Producción y Costeo
-export type Ingredient = Schemas['Ingredient'];
-export type IngredientCreateInput = Schemas['IngredientCreateInput'];
-export type PaginatedIngredients = Schemas['PaginatedIngredients'];
-export type RecipeIngredientItem = Schemas['RecipeIngredientItem'];
-export type RecipeIngredientItemInput = Schemas['RecipeIngredientItemInput'];
-export type RecipePackagingItem = Schemas['RecipePackagingItem'];
-export type Recipe = Schemas['Recipe'];
-export type RecipeCreateInput = Schemas['RecipeCreateInput'];
-export type PaginatedRecipes = Schemas['PaginatedRecipes'];
-export type ProductCostingAnalysis = Schemas['ProductCostingAnalysis'];
-export type ProductionOrder = Schemas['ProductionOrder'];
-export type ProductionOrderCreateInput = Schemas['ProductionOrderCreateInput'];
-export type PaginatedProductionOrders = Schemas['PaginatedProductionOrders'];
+// Compatibilidad
+export type Account = AccountingAccount;
+export type AccountCreateInput = AccountingAccountCreate;
+export type JournalItem = JournalLine;
+export type JournalItemInput = JournalLineCreate;
+export type JournalEntryCreateInput = JournalEntryCreate;
+export type DTE = DteInvoice;
+export type DTECreateInput = DteInvoiceCreate;
+export type ExpenseCreateInput = ExpenseCreate;
+export type DocumentMetadata = Document;
 
 export type HttpMethod = 'get' | 'put' | 'post' | 'delete' | 'options' | 'head' | 'patch' | 'trace';

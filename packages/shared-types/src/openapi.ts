@@ -4,15 +4,15 @@
  */
 
 export interface paths {
-    "/api/v1/health": {
+    "/health": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Health check del servicio y tenant activo */
-        get: operations["healthCheck"];
+        /** Health check */
+        get: operations["getHealth"];
         put?: never;
         post?: never;
         delete?: never;
@@ -21,14 +21,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounting/accounts": {
+    "/accounting/accounts": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar cuentas contables paginadas */
+        /** Listar cuentas contables */
         get: operations["listAccountingAccounts"];
         put?: never;
         /** Crear cuenta contable */
@@ -39,34 +39,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounting/accounts/seed-default": {
+    "/accounting/accounts/{accountId}": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Identificador de cuenta contable. */
+                accountId: components["parameters"]["AccountId"];
+            };
             cookie?: never;
         };
-        get?: never;
+        /** Obtener cuenta contable */
+        get: operations["getAccountingAccount"];
         put?: never;
-        /** Inicializar plan de cuentas chileno por defecto */
-        post: operations["seedDefaultAccountingAccounts"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Actualizar cuenta contable */
+        patch: operations["updateAccountingAccount"];
         trace?: never;
     };
-    "/api/v1/accounting/journal-entries": {
+    "/accounting/journal-entries": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar asientos de diario paginados */
+        /** Listar asientos contables */
         get: operations["listJournalEntries"];
         put?: never;
-        /** Crear asiento contable en borrador (requiere balance Debe = Haber) */
+        /**
+         * Crear asiento contable
+         * @description Crea un asiento en estado draft.
+         *
+         *     El backend debe validar que la suma de débitos sea igual a la suma de créditos.
+         */
         post: operations["createJournalEntry"];
         delete?: never;
         options?: never;
@@ -74,16 +83,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounting/journal-entries/{id}/post": {
+    "/accounting/journal-entries/{entryId}": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Identificador de asiento contable. */
+                entryId: components["parameters"]["EntryId"];
+            };
+            cookie?: never;
+        };
+        /** Obtener asiento contable */
+        get: operations["getJournalEntry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounting/journal-entries/{entryId}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identificador de asiento contable. */
+                entryId: components["parameters"]["EntryId"];
+            };
             cookie?: never;
         };
         get?: never;
         put?: never;
-        /** Publicar y asentar definitivamente un asiento contable */
+        /**
+         * Postear asiento contable
+         * @description Cambia un asiento de draft a posted.
+         *
+         *     Solo debe permitirse si el asiento está balanceado.
+         */
         post: operations["postJournalEntry"];
         delete?: never;
         options?: never;
@@ -91,69 +128,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounting/journal-entries/{id}/void": {
+    "/invoicing/dte": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        /** Listar DTE */
+        get: operations["listDteInvoices"];
+        put?: never;
+        /**
+         * Registrar DTE
+         * @description Registra un DTE interno en estado draft.
+         *
+         *     La emisión real ante SII se gestiona mediante el endpoint de issue.
+         */
+        post: operations["createDteInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoicing/dte/{dteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identificador de DTE. */
+                dteId: components["parameters"]["DteId"];
+            };
+            cookie?: never;
+        };
+        /** Obtener DTE */
+        get: operations["getDteInvoice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoicing/dte/{dteId}/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identificador de DTE. */
+                dteId: components["parameters"]["DteId"];
+            };
             cookie?: never;
         };
         get?: never;
         put?: never;
-        /** Anular asiento contable */
-        post: operations["voidJournalEntry"];
+        /**
+         * Emitir DTE
+         * @description Marca el DTE como emitido.
+         *
+         *     En fases posteriores, este endpoint integrará SII.
+         */
+        post: operations["issueDteInvoice"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/invoicing/dte": {
+    "/expenses": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Listar DTEs emitidos paginados */
-        get: operations["listDtes"];
-        put?: never;
-        /** Crear documento tributario electrónico DTE */
-        post: operations["createDte"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/invoicing/dte/{id}/emit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Transmitir DTE al SII */
-        post: operations["emitDte"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/expenses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar gastos paginados */
+        /** Listar gastos */
         get: operations["listExpenses"];
         put?: never;
-        /** Crear gasto con desglose de insumos */
+        /** Crear gasto */
         post: operations["createExpense"];
         delete?: never;
         options?: never;
@@ -161,15 +214,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/expenses/{id}": {
+    "/expenses/{expenseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identificador de gasto. */
+                expenseId: components["parameters"]["ExpenseId"];
+            };
+            cookie?: never;
+        };
+        /** Obtener gasto */
+        get: operations["getExpense"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Actualizar gasto */
+        patch: operations["updateExpense"];
+        trace?: never;
+    };
+    "/documents": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Detalle del gasto e insumos asociados */
-        get: operations["getExpenseById"];
+        /** Listar documentos */
+        get: operations["listDocuments"];
+        put?: never;
+        /**
+         * Subir documento
+         * @description Sube un documento binario y registra sus metadatos.
+         *
+         *     Usar multipart/form-data.
+         */
+        post: operations["createDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identificador de documento. */
+                documentId: components["parameters"]["DocumentId"];
+            };
+            cookie?: never;
+        };
+        /** Obtener metadatos de documento */
+        get: operations["getDocument"];
         put?: never;
         post?: never;
         delete?: never;
@@ -178,156 +278,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/expenses/{id}/approve": {
+    "/documents/{documentId}/content": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Identificador de documento. */
+                documentId: components["parameters"]["DocumentId"];
+            };
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Aprobar gasto e impactar inventario (PPP) */
-        post: operations["approveExpense"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/expenses/{id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Rechazar gasto */
-        post: operations["rejectExpense"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/upload": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Subir factura, boleta o comprobante a la bóveda multi-tenant */
-        post: operations["uploadDocument"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Metadatos del documento en bóveda */
-        get: operations["getDocumentMetadata"];
+        /** Descargar contenido de documento */
+        get: operations["getDocumentContent"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/documents/{id}/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Descargar binario físico del documento */
-        get: operations["downloadDocument"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inventory/ingredients": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar insumos paginados */
-        get: operations["listIngredients"];
-        put?: never;
-        /** Crear insumo */
-        post: operations["createIngredient"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/production/recipes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar escandallos y fichas técnicas */
-        get: operations["listRecipes"];
-        put?: never;
-        /** Crear escandallo / ficha técnica */
-        post: operations["createRecipe"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/production/costing/{productId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Cálculo de costo de producción y margen bruto en tiempo real */
-        get: operations["getProductCosting"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/production/orders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Listar órdenes de horneado paginadas */
-        get: operations["listProductionOrders"];
-        put?: never;
-        /** Crear orden de horneado con descuento de inventario */
-        post: operations["createProductionOrder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -338,550 +302,298 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /**
-         * @description Monto monetario no negativo representado como string decimal exacto (hasta 2 decimales) para prevenir errores de precisión flotante.
-         * @example 15990.00
-         */
+        /** Format: uuid */
+        Uuid: string;
+        /** Format: date */
+        Date: string;
+        /** Format: date-time */
+        DateTime: string;
+        /** @description Número decimal enviado como string para evitar errores de punto flotante. Hasta 2 decimales. */
+        DecimalString: string;
+        /** @description Número decimal no negativo enviado como string. Hasta 2 decimales. */
         NonNegativeDecimalString: string;
-        ProblemDetails: {
-            /**
-             * Format: uri
-             * @description URI de referencia que identifica el tipo de problema (RFC 7807)
-             * @example about:blank
-             */
-            type: string;
-            /**
-             * @description Resumen corto y legible del error
-             * @example Bad Request
-             */
-            title: string;
-            /**
-             * @description Código de estado HTTP
-             * @example 400
-             */
-            status: number;
-            /**
-             * @description Explicación detallada del problema específico ocurrido
-             * @example El asiento contable no está cuadrado: Debe (15000.00) != Haber (14000.00)
-             */
-            detail?: string;
-            /**
-             * @description URI que identifica la ocurrencia específica del problema
-             * @example /api/v1/accounting/journal-entries
-             */
-            instance?: string;
-            /** @description Detalle de errores por campo cuando aplica validación */
-            invalid_params?: {
-                /** @example monto_neto */
-                name: string;
-                /** @example Debe coincidir con la expresión ^\\d+(\\.\\d{1,2})?$ */
-                reason: string;
-            }[];
+        HealthResponse: {
+            /** @enum {string} */
+            status: "ok";
+            service: string;
+            version: string;
         };
-        PaginationMeta: {
-            /**
-             * @description Total de registros disponibles
-             * @example 42
-             */
-            total: number;
-            /**
-             * @description Página actual solicitada
-             * @example 1
-             */
+        PageMeta: {
             page: number;
-            /**
-             * @description Elementos por página
-             * @example 20
-             */
             page_size: number;
-            /**
-             * @description Cantidad total de páginas
-             * @example 3
-             */
+            total: number;
             total_pages: number;
         };
-        HealthResponse: {
-            /** @example ok */
-            status: string;
-            /** @example pasteleria-api-fase1 */
-            service: string;
-            /** Format: date-time */
-            timestamp: string;
-            /** @example default-atelier */
-            tenant_id: string;
+        ErrorDetail: {
+            field: string;
+            message: string;
+            code?: string;
         };
-        Account: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            /** @example 1.1.01 */
-            codigo: string;
-            /** @example Caja Chica y Efectivo */
-            nombre: string;
-            /** @enum {string} */
-            tipo: "activo" | "pasivo" | "patrimonio" | "ingreso" | "gasto";
-            /** @default true */
-            activa: boolean;
+        ProblemDetail: {
+            /** Format: uri */
+            type?: string;
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: components["schemas"]["ErrorDetail"][];
         };
-        AccountCreateInput: {
-            /** @example 1.1.01 */
-            codigo: string;
-            /** @example Caja Chica y Efectivo */
-            nombre: string;
-            /** @enum {string} */
-            tipo: "activo" | "pasivo" | "patrimonio" | "ingreso" | "gasto";
+        /** @enum {string} */
+        AccountType: "asset" | "liability" | "equity" | "income" | "expense";
+        /** @enum {string} */
+        JournalStatus: "draft" | "posted" | "voided";
+        /**
+         * @description Tipo de DTE según SII de Chile.
+         * @enum {string}
+         */
+        DteType: "33" | "34" | "39" | "41" | "43" | "45" | "46" | "52" | "56" | "61" | "110" | "111" | "112";
+        /** @enum {string} */
+        DteStatus: "draft" | "issued" | "accepted" | "rejected" | "annulled";
+        /** @enum {string} */
+        Currency: "CLP" | "USD";
+        /** @enum {string} */
+        ExpenseStatus: "draft" | "submitted" | "approved" | "paid" | "rejected";
+        AccountingAccount: {
+            id: components["schemas"]["Uuid"];
+            tenant_id: components["schemas"]["Uuid"];
+            /** @description Código contable, por ejemplo 1110101. */
+            code: string;
+            name: string;
+            account_type: components["schemas"]["AccountType"];
+            is_active: boolean;
+            created_at: components["schemas"]["DateTime"];
+            updated_at: components["schemas"]["DateTime"];
         };
-        PaginatedAccounts: {
-            items: components["schemas"]["Account"][];
-            meta: components["schemas"]["PaginationMeta"];
+        AccountingAccountCreate: {
+            code: string;
+            name: string;
+            account_type: components["schemas"]["AccountType"];
         };
-        JournalItem: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            entry_id: string;
-            /** Format: uuid */
-            account_id: string;
-            debe: components["schemas"]["NonNegativeDecimalString"];
-            haber: components["schemas"]["NonNegativeDecimalString"];
-            /** @example 76.123.456-7 */
-            contacto_rut_o_nombre?: string | null;
+        AccountingAccountUpdate: {
+            code?: string;
+            name?: string;
+            account_type?: components["schemas"]["AccountType"];
+            is_active?: boolean;
         };
-        JournalItemInput: {
-            /** Format: uuid */
-            account_id: string;
-            debe: components["schemas"]["NonNegativeDecimalString"];
-            haber: components["schemas"]["NonNegativeDecimalString"];
-            /** @example 76.123.456-7 */
-            contacto_rut_o_nombre?: string | null;
+        AccountingAccountPage: components["schemas"]["PageMeta"] & {
+            items: components["schemas"]["AccountingAccount"][];
+        };
+        JournalLine: {
+            account_id: components["schemas"]["Uuid"];
+            debit: components["schemas"]["NonNegativeDecimalString"];
+            credit: components["schemas"]["NonNegativeDecimalString"];
+            memo?: string;
+        };
+        JournalLineCreate: {
+            account_id: components["schemas"]["Uuid"];
+            debit: components["schemas"]["NonNegativeDecimalString"];
+            credit: components["schemas"]["NonNegativeDecimalString"];
+            memo?: string;
         };
         JournalEntry: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            numero_asiento: number;
-            /** Format: date */
-            fecha_asiento: string;
-            glosa_descripcion: string;
-            /** @enum {string} */
-            estado: "draft" | "posted" | "voided";
-            /** @example MANUAL */
-            referencia_origen: string;
-            items: components["schemas"]["JournalItem"][];
-            /** Format: date-time */
-            created_at: string;
+            id: components["schemas"]["Uuid"];
+            tenant_id: components["schemas"]["Uuid"];
+            entry_date: components["schemas"]["Date"];
+            description: string;
+            status: components["schemas"]["JournalStatus"];
+            lines: components["schemas"]["JournalLine"][];
+            total_debit: components["schemas"]["NonNegativeDecimalString"];
+            total_credit: components["schemas"]["NonNegativeDecimalString"];
+            posted_at?: components["schemas"]["DateTime"];
+            created_at: components["schemas"]["DateTime"];
+            updated_at: components["schemas"]["DateTime"];
         };
-        JournalEntryCreateInput: {
-            /** Format: date */
-            fecha_asiento: string;
-            glosa_descripcion: string;
-            /** @default MANUAL */
-            referencia_origen: string;
-            items: components["schemas"]["JournalItemInput"][];
+        JournalEntryCreate: {
+            entry_date: components["schemas"]["Date"];
+            description: string;
+            lines: components["schemas"]["JournalLineCreate"][];
         };
-        PaginatedJournalEntries: {
+        JournalEntryPage: components["schemas"]["PageMeta"] & {
             items: components["schemas"]["JournalEntry"][];
-            meta: components["schemas"]["PaginationMeta"];
         };
-        DTE: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            /** @enum {integer} */
-            tipo_dte: 33 | 39 | 61;
+        DteInvoice: {
+            id: components["schemas"]["Uuid"];
+            tenant_id: components["schemas"]["Uuid"];
+            dte_type: components["schemas"]["DteType"];
             folio: number;
-            /** Format: date */
-            fecha_emision: string;
-            /** @example 76.999.888-K */
-            emisor_rut: string;
-            /** @example 15.432.123-4 */
-            receptor_rut: string;
-            /** @example Cliente Particular SpA */
-            receptor_razon_social: string;
-            monto_neto: components["schemas"]["NonNegativeDecimalString"];
-            monto_exento: components["schemas"]["NonNegativeDecimalString"];
-            monto_iva: components["schemas"]["NonNegativeDecimalString"];
-            monto_total: components["schemas"]["NonNegativeDecimalString"];
-            /** @enum {string} */
-            estado_sii: "draft" | "generated" | "sent_to_sii" | "accepted_by_sii" | "rejected_by_sii";
-            /** @example TRACK-889911 */
-            track_id_sii?: string | null;
-            /** @example vault/dte/33-1024.xml */
-            xml_payload_uri?: string | null;
-            /** Format: uuid */
-            order_id?: string | null;
-            /** Format: date-time */
-            created_at: string;
+            issue_date: components["schemas"]["Date"];
+            status: components["schemas"]["DteStatus"];
+            currency: components["schemas"]["Currency"];
+            recipient_rut?: string;
+            recipient_name?: string;
+            subtotal?: components["schemas"]["NonNegativeDecimalString"];
+            tax_amount?: components["schemas"]["NonNegativeDecimalString"];
+            total: components["schemas"]["NonNegativeDecimalString"];
+            /** @description URI interna o externa del acuse/recibo SII, cuando exista. */
+            sii_receipt_uri?: string;
+            created_at: components["schemas"]["DateTime"];
+            updated_at: components["schemas"]["DateTime"];
         };
-        DTECreateInput: {
-            /** @enum {integer} */
-            tipo_dte: 33 | 39 | 61;
-            /** @example 1024 */
-            folio?: number | null;
-            /** Format: date */
-            fecha_emision: string;
-            /** @example 76.999.888-K */
-            emisor_rut: string;
-            /** @example 15.432.123-4 */
-            receptor_rut: string;
-            /** @example Cliente Particular SpA */
-            receptor_razon_social: string;
-            monto_neto: components["schemas"]["NonNegativeDecimalString"];
-            monto_exento?: components["schemas"]["NonNegativeDecimalString"];
-            monto_iva?: components["schemas"]["NonNegativeDecimalString"];
-            monto_total: components["schemas"]["NonNegativeDecimalString"];
-            /** Format: uuid */
-            order_id?: string | null;
+        DteInvoiceCreate: {
+            dte_type: components["schemas"]["DteType"];
+            folio: number;
+            issue_date: components["schemas"]["Date"];
+            /** @default CLP */
+            currency: components["schemas"]["Currency"];
+            recipient_rut?: string;
+            recipient_name?: string;
+            subtotal?: components["schemas"]["NonNegativeDecimalString"];
+            tax_amount?: components["schemas"]["NonNegativeDecimalString"];
+            total: components["schemas"]["NonNegativeDecimalString"];
         };
-        PaginatedDtes: {
-            items: components["schemas"]["DTE"][];
-            meta: components["schemas"]["PaginationMeta"];
-        };
-        ExpenseItemDetail: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            ingredient_id?: string | null;
-            /** @example Harina de Trigo Seleccionada */
-            nombre_insumo: string;
-            /** @example 25 */
-            cantidad: number;
-            /** @example kg */
-            unidad_medida: string;
-            precio_unitario: components["schemas"]["NonNegativeDecimalString"];
-            subtotal: components["schemas"]["NonNegativeDecimalString"];
-        };
-        ExpenseItemDetailInput: {
-            /** Format: uuid */
-            ingredient_id?: string | null;
-            /** @example Harina de Trigo Seleccionada */
-            nombre_insumo: string;
-            /** @example 25 */
-            cantidad: number;
-            /** @example kg */
-            unidad_medida: string;
-            precio_unitario: components["schemas"]["NonNegativeDecimalString"];
+        DteInvoicePage: components["schemas"]["PageMeta"] & {
+            items: components["schemas"]["DteInvoice"][];
         };
         Expense: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            /** @example FAC-98442 */
-            folio_comprobante?: string | null;
-            /** @example Molinos del Sur SpA */
-            proveedor_nombre: string;
-            /** @example 76.888.777-6 */
-            proveedor_rut?: string | null;
-            /** Format: date */
-            fecha_gasto: string;
-            monto_neto: components["schemas"]["NonNegativeDecimalString"];
-            monto_iva: components["schemas"]["NonNegativeDecimalString"];
-            monto_total: components["schemas"]["NonNegativeDecimalString"];
-            /**
-             * @default CLP
-             * @example CLP
-             */
-            moneda: string;
-            /** @enum {string} */
-            categoria_gasto: "materias_primas" | "packaging" | "servicios" | "arriendo" | "otros";
-            /** @enum {string} */
-            metodo_pago: "transferencia" | "efectivo" | "tarjeta_credito";
-            /** @enum {string} */
-            estado: "draft" | "pending_approval" | "approved" | "rejected";
-            /** Format: uuid */
-            document_id?: string | null;
-            insumos_detalle?: components["schemas"]["ExpenseItemDetail"][];
-            /** @example usr_chef_admin */
-            created_by_user_id: string;
-            /** @example usr_owner */
-            approved_by_user_id?: string | null;
-            /** @example Factura sin detalle fiscal adjunto */
-            motivo_rechazo?: string | null;
-            /** Format: date-time */
-            created_at: string;
+            id: components["schemas"]["Uuid"];
+            tenant_id: components["schemas"]["Uuid"];
+            expense_date: components["schemas"]["Date"];
+            amount: components["schemas"]["NonNegativeDecimalString"];
+            currency: components["schemas"]["Currency"];
+            status: components["schemas"]["ExpenseStatus"];
+            document_id?: components["schemas"]["Uuid"];
+            description?: string;
+            merchant?: string;
+            created_at: components["schemas"]["DateTime"];
+            updated_at: components["schemas"]["DateTime"];
         };
-        ExpenseCreateInput: {
-            /** @example FAC-98442 */
-            folio_comprobante?: string | null;
-            /** @example Molinos del Sur SpA */
-            proveedor_nombre: string;
-            /** @example 76.888.777-6 */
-            proveedor_rut?: string | null;
-            /** Format: date */
-            fecha_gasto: string;
-            monto_neto: components["schemas"]["NonNegativeDecimalString"];
-            monto_iva?: components["schemas"]["NonNegativeDecimalString"];
-            monto_total: components["schemas"]["NonNegativeDecimalString"];
-            /** @default CLP */
-            moneda: string;
-            /**
-             * @default materias_primas
-             * @enum {string}
-             */
-            categoria_gasto: "materias_primas" | "packaging" | "servicios" | "arriendo" | "otros";
-            /**
-             * @default transferencia
-             * @enum {string}
-             */
-            metodo_pago: "transferencia" | "efectivo" | "tarjeta_credito";
-            /** Format: uuid */
-            document_id?: string | null;
-            insumos_detalle?: components["schemas"]["ExpenseItemDetailInput"][];
+        ExpenseCreate: {
+            expense_date: components["schemas"]["Date"];
+            amount: components["schemas"]["NonNegativeDecimalString"];
+            currency: components["schemas"]["Currency"];
+            document_id?: components["schemas"]["Uuid"];
+            description?: string;
+            merchant?: string;
         };
-        ExpenseRejectInput: {
-            /** @example Comprobante no legible */
-            motivo_rechazo: string;
+        ExpenseUpdate: {
+            status?: components["schemas"]["ExpenseStatus"];
+            document_id?: components["schemas"]["Uuid"];
+            description?: string;
+            merchant?: string;
         };
-        PaginatedExpenses: {
+        ExpensePage: components["schemas"]["PageMeta"] & {
             items: components["schemas"]["Expense"][];
-            meta: components["schemas"]["PaginationMeta"];
         };
-        DocumentMetadata: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            /** @example factura_compra_molino.pdf */
-            filename_original: string;
-            /** @example application/pdf */
+        Document: {
+            id: components["schemas"]["Uuid"];
+            tenant_id: components["schemas"]["Uuid"];
+            filename: string;
             mime_type: string;
-            /** @example 1048576 */
-            file_size_bytes: number;
-            /** @example vault/default-atelier/2026/09/factura.pdf */
-            storage_uri: string;
-            /** @example e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 */
-            checksum_sha256: string;
-            /** @example usr_chef_admin */
-            uploaded_by_user_id: string;
-            /** Format: date-time */
-            created_at: string;
-        };
-        Ingredient: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            /** @example ING-MAN-01 */
-            codigo?: string | null;
-            /** @example Mantequilla Francesa sin sal 82% MG */
-            nombre: string;
-            /** @enum {string} */
-            unidad_medida: "kg" | "g" | "l" | "ml" | "unidad";
-            costo_unitario_promedio: components["schemas"]["NonNegativeDecimalString"];
-            /** @example 25.5 */
-            stock_actual: number;
+            size_bytes: number;
+            checksum_sha256?: string;
             /**
-             * @example [
-             *       "Lácteos"
-             *     ]
+             * @description Ruta relativa al base URL del API v1 para descargar el contenido.
+             * @example /documents/00000000-0000-0000-0000-000000000000/content
              */
-            alergenos?: string[];
-            /** Format: date-time */
-            created_at: string;
+            content_path: string;
+            /** @description URI interna de almacenamiento. No debe exponer secretos. */
+            storage_uri?: string;
+            created_at: components["schemas"]["DateTime"];
         };
-        IngredientCreateInput: {
-            /** @example ING-MAN-01 */
-            codigo?: string | null;
-            /** @example Mantequilla Francesa sin sal 82% MG */
-            nombre: string;
-            /** @enum {string} */
-            unidad_medida: "kg" | "g" | "l" | "ml" | "unidad";
-            costo_unitario_promedio: components["schemas"]["NonNegativeDecimalString"];
-            /** @default 0 */
-            stock_actual: number;
-            alergenos?: string[];
+        DocumentUploadRequest: {
+            /** Format: binary */
+            file: string;
+            filename?: string;
+            mime_type?: string;
+            checksum_sha256?: string;
         };
-        PaginatedIngredients: {
-            items: components["schemas"]["Ingredient"][];
-            meta: components["schemas"]["PaginationMeta"];
-        };
-        RecipeIngredientItem: {
-            /** Format: uuid */
-            ingredient_id: string;
-            /** @example Mantequilla Francesa 82% MG */
-            nombre_ingrediente: string;
-            /** @example 0.25 */
-            cantidad_neta: number;
-            /** @example kg */
-            unidad_medida: string;
-            /** @example 5 */
-            porcentaje_merma: number;
-            costo_calculado: components["schemas"]["NonNegativeDecimalString"];
-        };
-        RecipeIngredientItemInput: {
-            /** Format: uuid */
-            ingredient_id: string;
-            /** @example 0.25 */
-            cantidad_neta: number;
-            /**
-             * @default 0
-             * @example 5
-             */
-            porcentaje_merma: number;
-        };
-        RecipePackagingItem: {
-            /** @example Caja Premium con cinta de raso */
-            nombre: string;
-            costo_unitario: components["schemas"]["NonNegativeDecimalString"];
-            /**
-             * @default 1
-             * @example 1
-             */
-            cantidad: number;
-        };
-        Recipe: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            /** @example prod_opera_01 */
-            product_id: string;
-            /** @example Ópera Clásica de París 12 Porciones */
-            nombre_receta: string;
-            /** @example 12 */
-            rendimiento_porciones: number;
-            /** @example 90 */
-            tiempo_elaboracion_minutos?: number;
-            ingredientes: components["schemas"]["RecipeIngredientItem"][];
-            empaques: components["schemas"]["RecipePackagingItem"][];
-            costo_total_batch: components["schemas"]["NonNegativeDecimalString"];
-            costo_por_porcion: components["schemas"]["NonNegativeDecimalString"];
-            /** @example Hornear a 180°C durante 12 minutos. */
-            instrucciones?: string | null;
-            /** Format: date-time */
-            created_at: string;
-        };
-        RecipeCreateInput: {
-            /** @example prod_opera_01 */
-            product_id: string;
-            /** @example Ópera Clásica de París 12 Porciones */
-            nombre_receta: string;
-            /** @example 12 */
-            rendimiento_porciones: number;
-            /** @default 60 */
-            tiempo_elaboracion_minutos: number;
-            ingredientes: components["schemas"]["RecipeIngredientItemInput"][];
-            empaques?: components["schemas"]["RecipePackagingItem"][];
-            /** @example Hornear a 180°C durante 12 minutos. */
-            instrucciones?: string | null;
-        };
-        PaginatedRecipes: {
-            items: components["schemas"]["Recipe"][];
-            meta: components["schemas"]["PaginationMeta"];
-        };
-        ProductCostingAnalysis: {
-            /** @example prod_opera_01 */
-            product_id: string;
-            tenant_id: string;
-            /** @example Torta Ópera 12 Porciones */
-            nombre_producto: string;
-            precio_venta_neto: components["schemas"]["NonNegativeDecimalString"];
-            costo_insumos_porcion: components["schemas"]["NonNegativeDecimalString"];
-            costo_empaque_porcion: components["schemas"]["NonNegativeDecimalString"];
-            costo_total_porcion: components["schemas"]["NonNegativeDecimalString"];
-            margen_bruto_monto: components["schemas"]["NonNegativeDecimalString"];
-            /** @example 62.5 */
-            margen_bruto_porcentaje: number;
-            /** @example false */
-            alerta_margen_bajo?: boolean;
-            /** Format: date-time */
-            fecha_calculo: string;
-        };
-        ProductionOrder: {
-            /** Format: uuid */
-            id: string;
-            tenant_id: string;
-            /** @example ORD-2026-001 */
-            numero_orden: string;
-            /** Format: uuid */
-            recipe_id: string;
-            /** @example prod_opera_01 */
-            product_id: string;
-            /** @example 4 */
-            cantidad_a_elaborar: number;
-            /** @enum {string} */
-            estado: "scheduled" | "in_prep" | "baking" | "finished" | "cancelled";
-            /** Format: date */
-            fecha_programada: string;
-            /** Format: date-time */
-            fecha_finalizada?: string | null;
-            /** @example Chef Pierre */
-            responsable_chef?: string | null;
-            /** @example true */
-            inventario_descontado: boolean;
-            /** @example Decoración con pan de oro comestible */
-            notas?: string | null;
-            /** Format: date-time */
-            created_at: string;
-        };
-        ProductionOrderCreateInput: {
-            /** Format: uuid */
-            recipe_id: string;
-            /** @example 4 */
-            cantidad_a_elaborar: number;
-            /** Format: date */
-            fecha_programada: string;
-            /** @example Chef Pierre */
-            responsable_chef?: string | null;
-            /** @default true */
-            descontar_inventario_inmediato: boolean;
-            /** @example Decoración con pan de oro */
-            notas?: string | null;
-        };
-        PaginatedProductionOrders: {
-            items: components["schemas"]["ProductionOrder"][];
-            meta: components["schemas"]["PaginationMeta"];
+        DocumentPage: components["schemas"]["PageMeta"] & {
+            items: components["schemas"]["Document"][];
         };
     };
     responses: {
-        /** @description Solicitud incorrecta o datos inválidos */
-        BadRequestError: {
+        /** @description Solicitud inválida. */
+        BadRequest: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
+                "application/json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description No autenticado o token vencido */
-        UnauthorizedError: {
+        /** @description No autenticado. */
+        Unauthorized: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
+                "application/json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description No autorizado para acceder a este tenant o recurso */
-        ForbiddenError: {
+        /** @description Sin permiso para el tenant o recurso. */
+        Forbidden: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
+                "application/json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description Recurso no encontrado */
-        NotFoundError: {
+        /** @description Recurso no encontrado. */
+        NotFound: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
+                "application/json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description Error interno del servidor */
-        InternalServerError: {
+        /** @description Conflicto de estado o duplicidad. */
+        Conflict: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/problem+json": components["schemas"]["ProblemDetails"];
+                "application/json": components["schemas"]["ProblemDetail"];
+            };
+        };
+        /** @description Error de validación semántica. */
+        UnprocessableEntity: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ProblemDetail"];
+            };
+        };
+        /** @description Error inesperado. */
+        UnexpectedError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ProblemDetail"];
             };
         };
     };
     parameters: {
-        /** @description Identificador obligatorio de la pastelería/tenant */
-        TenantIdHeader: string;
-        /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-        IdempotencyKeyHeader: string;
+        /**
+         * @description Identificador del tenant actual.
+         *
+         *     En desarrollo se envía manualmente.
+         *     En producción debe validarse contra autenticación y membresías.
+         *     El cliente nunca debe enviar tenant_id en el body de creación.
+         */
+        TenantIdHeader: components["schemas"]["Uuid"];
+        /**
+         * @description Clave opcional para evitar duplicidad en operaciones POST.
+         *     Recomendada para creación de gastos, DTE y asientos contables.
+         */
+        IdempotencyKey: string;
+        /** @description Página solicitada, basada en 1. */
+        Page: number;
+        /** @description Tamaño de página. */
+        PageSize: number;
+        /** @description Identificador de cuenta contable. */
+        AccountId: components["schemas"]["Uuid"];
+        /** @description Identificador de asiento contable. */
+        EntryId: components["schemas"]["Uuid"];
+        /** @description Identificador de DTE. */
+        DteId: components["schemas"]["Uuid"];
+        /** @description Identificador de gasto. */
+        ExpenseId: components["schemas"]["Uuid"];
+        /** @description Identificador de documento. */
+        DocumentId: components["schemas"]["Uuid"];
     };
     requestBodies: never;
     headers: never;
@@ -889,7 +601,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    healthCheck: {
+    getHealth: {
         parameters: {
             query?: never;
             header?: never;
@@ -898,7 +610,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Estado del backend y tenant */
+            /** @description Servicio saludable */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -907,18 +619,25 @@ export interface operations {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            500: components["responses"]["InternalServerError"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
     listAccountingAccounts: {
         parameters: {
             query?: {
-                page?: number;
-                page_size?: number;
+                /** @description Página solicitada, basada en 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Tamaño de página. */
+                page_size?: components["parameters"]["PageSize"];
             };
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
@@ -932,88 +651,145 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedAccounts"];
+                    "application/json": components["schemas"]["AccountingAccountPage"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
     createAccountingAccount: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
+                /**
+                 * @description Clave opcional para evitar duplicidad en operaciones POST.
+                 *     Recomendada para creación de gastos, DTE y asientos contables.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AccountCreateInput"];
+                "application/json": components["schemas"]["AccountingAccountCreate"];
             };
         };
         responses: {
-            /** @description Cuenta creada */
+            /** @description Cuenta contable creada */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Account"];
+                    "application/json": components["schemas"]["AccountingAccount"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    seedDefaultAccountingAccounts: {
+    getAccountingAccount: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
-            path?: never;
+            path: {
+                /** @description Identificador de cuenta contable. */
+                accountId: components["parameters"]["AccountId"];
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Cuentas inicializadas */
+            /** @description Cuenta contable */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Account"][];
+                    "application/json": components["schemas"]["AccountingAccount"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["UnexpectedError"];
+        };
+    };
+    updateAccountingAccount: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                /** @description Identificador de cuenta contable. */
+                accountId: components["parameters"]["AccountId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountingAccountUpdate"];
+            };
+        };
+        responses: {
+            /** @description Cuenta contable actualizada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountingAccount"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
     listJournalEntries: {
         parameters: {
             query?: {
-                estado?: "draft" | "posted" | "voided";
-                fechaDesde?: string;
-                fechaHasta?: string;
-                page?: number;
-                page_size?: number;
+                /** @description Página solicitada, basada en 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Tamaño de página. */
+                page_size?: components["parameters"]["PageSize"];
             };
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
@@ -1021,40 +797,46 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Lista paginada de asientos */
+            /** @description Lista paginada de asientos contables */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedJournalEntries"];
+                    "application/json": components["schemas"]["JournalEntryPage"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
     createJournalEntry: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
+                /**
+                 * @description Clave opcional para evitar duplicidad en operaciones POST.
+                 *     Recomendada para creación de gastos, DTE y asientos contables.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["JournalEntryCreateInput"];
+                "application/json": components["schemas"]["JournalEntryCreate"];
             };
         };
         responses: {
-            /** @description Asiento creado */
+            /** @description Asiento contable creado */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -1063,29 +845,68 @@ export interface operations {
                     "application/json": components["schemas"]["JournalEntry"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
+        };
+    };
+    getJournalEntry: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                /** @description Identificador de asiento contable. */
+                entryId: components["parameters"]["EntryId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Asiento contable */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntry"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
     postJournalEntry: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
-                id: string;
+                /** @description Identificador de asiento contable. */
+                entryId: components["parameters"]["EntryId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Asiento contabilizado */
+            /** @description Asiento posteado */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1094,55 +915,28 @@ export interface operations {
                     "application/json": components["schemas"]["JournalEntry"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    voidJournalEntry: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
-            };
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Asiento anulado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JournalEntry"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    listDtes: {
+    listDteInvoices: {
         parameters: {
             query?: {
-                tipoDte?: 33 | 39 | 61;
-                estadoSii?: "draft" | "generated" | "sent_to_sii" | "accepted_by_sii" | "rejected_by_sii";
-                page?: number;
-                page_size?: number;
+                /** @description Página solicitada, basada en 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Tamaño de página. */
+                page_size?: components["parameters"]["PageSize"];
             };
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
@@ -1150,96 +944,146 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Listado de DTEs */
+            /** @description Lista paginada de DTE */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedDtes"];
+                    "application/json": components["schemas"]["DteInvoicePage"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    createDte: {
+    createDteInvoice: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
+                /**
+                 * @description Clave opcional para evitar duplicidad en operaciones POST.
+                 *     Recomendada para creación de gastos, DTE y asientos contables.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DTECreateInput"];
+                "application/json": components["schemas"]["DteInvoiceCreate"];
             };
         };
         responses: {
-            /** @description DTE creado */
+            /** @description DTE registrado */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DTE"];
+                    "application/json": components["schemas"]["DteInvoice"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    emitDte: {
+    getDteInvoice: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
-                id: string;
+                /** @description Identificador de DTE. */
+                dteId: components["parameters"]["DteId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description DTE transmitido */
+            /** @description DTE */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DTE"];
+                    "application/json": components["schemas"]["DteInvoice"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["UnexpectedError"];
+        };
+    };
+    issueDteInvoice: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+            };
+            path: {
+                /** @description Identificador de DTE. */
+                dteId: components["parameters"]["DteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description DTE emitido */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DteInvoice"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
     listExpenses: {
         parameters: {
             query?: {
-                estado?: "draft" | "pending_approval" | "approved" | "rejected";
-                categoria?: string;
-                page?: number;
-                page_size?: number;
+                /** @description Página solicitada, basada en 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Tamaño de página. */
+                page_size?: components["parameters"]["PageSize"];
             };
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path?: never;
@@ -1253,34 +1097,40 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedExpenses"];
+                    "application/json": components["schemas"]["ExpensePage"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
     createExpense: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
+                /**
+                 * @description Clave opcional para evitar duplicidad en operaciones POST.
+                 *     Recomendada para creación de gastos, DTE y asientos contables.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExpenseCreateInput"];
+                "application/json": components["schemas"]["ExpenseCreate"];
             };
         };
         responses: {
-            /** @description Gasto registrado */
+            /** @description Gasto creado */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -1289,27 +1139,34 @@ export interface operations {
                     "application/json": components["schemas"]["Expense"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    getExpenseById: {
+    getExpense: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path: {
-                id: string;
+                /** @description Identificador de gasto. */
+                expenseId: components["parameters"]["ExpenseId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Detalle del gasto */
+            /** @description Gasto */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1318,66 +1175,36 @@ export interface operations {
                     "application/json": components["schemas"]["Expense"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    approveExpense: {
+    updateExpense: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
             };
             path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Gasto aprobado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Expense"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    rejectExpense: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
-            };
-            path: {
-                id: string;
+                /** @description Identificador de gasto. */
+                expenseId: components["parameters"]["ExpenseId"];
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExpenseRejectInput"];
+                "application/json": components["schemas"]["ExpenseUpdate"];
             };
         };
         responses: {
-            /** @description Gasto rechazado */
+            /** @description Gasto actualizado */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1386,95 +1213,146 @@ export interface operations {
                     "application/json": components["schemas"]["Expense"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    uploadDocument: {
+    listDocuments: {
+        parameters: {
+            query?: {
+                /** @description Página solicitada, basada en 1. */
+                page?: components["parameters"]["Page"];
+                /** @description Tamaño de página. */
+                page_size?: components["parameters"]["PageSize"];
+            };
+            header: {
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
+                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista paginada de documentos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentPage"];
+                };
+            };
+            default: components["responses"]["UnexpectedError"];
+        };
+    };
+    createDocument: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
+                /**
+                 * @description Clave opcional para evitar duplicidad en operaciones POST.
+                 *     Recomendada para creación de gastos, DTE y asientos contables.
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "multipart/form-data": {
-                    /**
-                     * Format: binary
-                     * @description Archivo PDF, PNG, JPG o WEBP (máx. 10 MB)
-                     */
-                    file: string;
-                };
+                "multipart/form-data": components["schemas"]["DocumentUploadRequest"];
             };
         };
         responses: {
-            /** @description Archivo almacenado */
+            /** @description Documento creado */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DocumentMetadata"];
+                    "application/json": components["schemas"]["Document"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    getDocumentMetadata: {
+    getDocument: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path: {
-                id: string;
+                /** @description Identificador de documento. */
+                documentId: components["parameters"]["DocumentId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Metadata obtenida */
+            /** @description Documento */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DocumentMetadata"];
+                    "application/json": components["schemas"]["Document"];
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
-    downloadDocument: {
+    getDocumentContent: {
         parameters: {
             query?: never;
             header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
+                /**
+                 * @description Identificador del tenant actual.
+                 *
+                 *     En desarrollo se envía manualmente.
+                 *     En producción debe validarse contra autenticación y membresías.
+                 *     El cliente nunca debe enviar tenant_id en el body de creación.
+                 */
                 "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
             };
             path: {
-                id: string;
+                /** @description Identificador de documento. */
+                documentId: components["parameters"]["DocumentId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Flujo binario */
+            /** @description Contenido binario del documento */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1483,233 +1361,8 @@ export interface operations {
                     "application/octet-stream": string;
                 };
             };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    listIngredients: {
-        parameters: {
-            query?: {
-                search?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista paginada de insumos */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedIngredients"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    createIngredient: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IngredientCreateInput"];
-            };
-        };
-        responses: {
-            /** @description Insumo creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Ingredient"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    listRecipes: {
-        parameters: {
-            query?: {
-                productId?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista paginada de recetas */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedRecipes"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    createRecipe: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RecipeCreateInput"];
-            };
-        };
-        responses: {
-            /** @description Receta creada */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Recipe"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    getProductCosting: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-            };
-            path: {
-                productId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Análisis de costeo y margen bruto */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductCostingAnalysis"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    listProductionOrders: {
-        parameters: {
-            query?: {
-                estado?: "scheduled" | "in_prep" | "baking" | "finished" | "cancelled";
-                page?: number;
-                page_size?: number;
-            };
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista paginada de órdenes de producción */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedProductionOrders"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    createProductionOrder: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Identificador obligatorio de la pastelería/tenant */
-                "X-Tenant-ID": components["parameters"]["TenantIdHeader"];
-                /** @description Clave única de idempotencia para prevenir duplicados en operaciones de creación */
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyHeader"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductionOrderCreateInput"];
-            };
-        };
-        responses: {
-            /** @description Orden de producción creada */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductionOrder"];
-                };
-            };
-            400: components["responses"]["BadRequestError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            500: components["responses"]["InternalServerError"];
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["UnexpectedError"];
         };
     };
 }

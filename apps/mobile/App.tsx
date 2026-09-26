@@ -16,8 +16,9 @@ type Tab = 'welcome' | 'catalog' | 'expenses';
 interface HealthData {
   status: string;
   service: string;
-  tenant_id: string;
-  timestamp: string;
+  version?: string;
+  tenant_id?: string;
+  timestamp?: string;
 }
 
 export default function App() {
@@ -34,7 +35,7 @@ export default function App() {
     setLoadingHealth(true);
     setConnectionError(null);
     try {
-      const { data, error } = await apiClient.GET('/api/v1/health');
+      const { data, error } = await apiClient.GET('/health');
       if (error || !data) {
         setConnectionError('El backend no respondió satisfactoriamente');
         setHealth({
