@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { unwrap, ApiError } from "@repo/api-client";
+import { unwrap, ApiError } from "@pasteleria/api-client";
 
 export const dynamic = 'force-dynamic';
 

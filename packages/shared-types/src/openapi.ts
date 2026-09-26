@@ -312,6 +312,11 @@ export interface components {
         DecimalString: string;
         /** @description Número decimal no negativo enviado como string. Hasta 2 decimales. */
         NonNegativeDecimalString: string;
+        /**
+         * @description Rol Único Tributario (RUT) chileno con o sin puntos y con guion y dígito verificador (0-9 o K).
+         * @example 76.123.456-7
+         */
+        ChileanRut: string;
         HealthResponse: {
             /** @enum {string} */
             status: "ok";
@@ -378,15 +383,27 @@ export interface components {
         AccountingAccountPage: components["schemas"]["PageMeta"] & {
             items: components["schemas"]["AccountingAccount"][];
         };
+        /**
+         * @description Línea de asiento contable de partida doble.
+         *     Regla de negocio: Principio XOR: o bien debit > 0 o credit > 0, nunca ambos simultáneamente mayores a 0.
+         */
         JournalLine: {
             account_id: components["schemas"]["Uuid"];
+            /** @description Monto al Debe. Si credit > 0, este valor debe ser "0.00". */
             debit: components["schemas"]["NonNegativeDecimalString"];
+            /** @description Monto al Haber. Si debit > 0, este valor debe ser "0.00". */
             credit: components["schemas"]["NonNegativeDecimalString"];
             memo?: string;
         };
+        /**
+         * @description Datos para crear una línea de asiento contable.
+         *     Regla de negocio: Principio XOR: o bien debit > 0 o credit > 0, nunca ambos simultáneamente mayores a 0.
+         */
         JournalLineCreate: {
             account_id: components["schemas"]["Uuid"];
+            /** @description Monto al Debe. Si credit > 0, este valor debe ser "0.00". */
             debit: components["schemas"]["NonNegativeDecimalString"];
+            /** @description Monto al Haber. Si debit > 0, este valor debe ser "0.00". */
             credit: components["schemas"]["NonNegativeDecimalString"];
             memo?: string;
         };
@@ -419,7 +436,7 @@ export interface components {
             issue_date: components["schemas"]["Date"];
             status: components["schemas"]["DteStatus"];
             currency: components["schemas"]["Currency"];
-            recipient_rut?: string;
+            recipient_rut?: components["schemas"]["ChileanRut"];
             recipient_name?: string;
             subtotal?: components["schemas"]["NonNegativeDecimalString"];
             tax_amount?: components["schemas"]["NonNegativeDecimalString"];
@@ -435,7 +452,7 @@ export interface components {
             issue_date: components["schemas"]["Date"];
             /** @default CLP */
             currency: components["schemas"]["Currency"];
-            recipient_rut?: string;
+            recipient_rut?: components["schemas"]["ChileanRut"];
             recipient_name?: string;
             subtotal?: components["schemas"]["NonNegativeDecimalString"];
             tax_amount?: components["schemas"]["NonNegativeDecimalString"];

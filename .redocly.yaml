@@ -13,9 +13,8 @@ rules:
   tag-description: off
   info-contact: off
   info-license: off
-  license-url: off
   security-defined: off
   no-unused-components: off
   operation-operationId-unique: error
   operation-operationId: error
-  no-$ref-siblings: error
+

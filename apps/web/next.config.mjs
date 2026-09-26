@@ -4,9 +4,6 @@ const nextConfig = {
     '@pasteleria/shared-types',
     '@pasteleria/api-client',
     '@pasteleria/ui',
-    '@repo/shared-types',
-    '@repo/api-client',
-    '@repo/ui',
   ],
   images: {
     remotePatterns: [

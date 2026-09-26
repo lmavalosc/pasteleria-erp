@@ -1,4 +1,4 @@
-import { createApiClient } from "@repo/api-client";
+import { createApiClient } from "@pasteleria/api-client";
 
 export const api = createApiClient({
   baseUrl:

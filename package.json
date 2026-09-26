@@ -21,7 +21,6 @@
     "audit:secrets": "python scripts/check-secrets.py",
     "type-check": "turbo run type-check",
     "typecheck": "turbo run type-check",
-    "generate:api": "turbo run generate --filter=@pasteleria/api-client",
     "generate:types": "openapi-typescript openapi/fase1.yaml -o packages/shared-types/src/openapi.ts",
     "generate:types:check": "npm run generate:types && git diff --exit-code packages/shared-types/src/openapi.ts",
     "clean": "turbo run clean"

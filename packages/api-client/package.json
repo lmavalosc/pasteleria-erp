@@ -17,9 +17,9 @@
   "scripts": {
     "build": "tsc --noEmit",
     "build:bundle": "tsup",
-    "generate": "openapi-typescript ../../openapi/fase1.yaml -o ./src/generated-schema.ts",
     "lint": "echo \"API client lint passed\"",
     "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "clean": "rimraf dist .turbo"
   },
   "dependencies": {
@@ -27,7 +27,6 @@
     "openapi-fetch": "^0.17.0"
   },
   "devDependencies": {
-    "openapi-typescript": "^7.6.1",
     "typescript": "^5.4.5"
   }
 }

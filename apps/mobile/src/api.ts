@@ -9,7 +9,7 @@ const DEFAULT_URL = Platform.select({
 });
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_URL;
-const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID || 'default-atelier';
+const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID || '00000000-0000-0000-0000-000000000001';
 
 export const apiClient = createFetchClient(API_BASE_URL, {
   'X-Tenant-ID': TENANT_ID,

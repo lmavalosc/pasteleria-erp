@@ -18,6 +18,7 @@ export type DateString = Schemas['Date'];
 export type DateTimeString = Schemas['DateTime'];
 export type DecimalString = Schemas['DecimalString'];
 export type NonNegativeDecimalString = Schemas['NonNegativeDecimalString'];
+export type ChileanRut = Schemas['ChileanRut'];
 export type ProblemDetail = Schemas['ProblemDetail'];
 export type ProblemDetails = Schemas['ProblemDetail'];
 export type ErrorDetail = Schemas['ErrorDetail'];

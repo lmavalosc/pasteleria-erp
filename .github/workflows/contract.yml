@@ -11,23 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Lint OpenAPI
-        run: pnpm openapi:lint
+        run: npm run openapi:lint
 
       - name: Generate types
-        run: pnpm generate:types
+        run: npm run generate:types
 
       - name: Check generated types are committed
         run: git diff --exit-code packages/shared-types/src/openapi.ts

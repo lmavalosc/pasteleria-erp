@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { api } from "./src/lib/api";
-import { unwrap, ApiError } from "@repo/api-client";
+import { unwrap, ApiError } from "@pasteleria/api-client";
 
 export default function App() {
   const [status, setStatus] = useState("Cargando...");

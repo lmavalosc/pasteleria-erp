@@ -673,6 +673,12 @@ components:
       description: Número decimal no negativo enviado como string. Hasta 2 decimales.
       pattern: '^\d+(\.\d{1,2})?$'
 
+    ChileanRut:
+      type: string
+      description: Rol Único Tributario (RUT) chileno con o sin puntos y con guion y dígito verificador (0-9 o K).
+      pattern: '^(\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]|\d{7,8}-[\dkK])$'
+      example: "76.123.456-7"
+
     HealthResponse:
       type: object
       required:
@@ -883,6 +889,9 @@ components:
 
     JournalLine:
       type: object
+      description: |
+        Línea de asiento contable de partida doble.
+        Regla de negocio: Principio XOR: o bien debit > 0 o credit > 0, nunca ambos simultáneamente mayores a 0.
       required:
         - account_id
         - debit
@@ -892,13 +901,18 @@ components:
           $ref: "#/components/schemas/Uuid"
         debit:
           $ref: "#/components/schemas/NonNegativeDecimalString"
+          description: Monto al Debe. Si credit > 0, este valor debe ser "0.00".
         credit:
           $ref: "#/components/schemas/NonNegativeDecimalString"
+          description: Monto al Haber. Si debit > 0, este valor debe ser "0.00".
         memo:
           type: string
 
     JournalLineCreate:
       type: object
+      description: |
+        Datos para crear una línea de asiento contable.
+        Regla de negocio: Principio XOR: o bien debit > 0 o credit > 0, nunca ambos simultáneamente mayores a 0.
       required:
         - account_id
         - debit
@@ -908,8 +922,10 @@ components:
           $ref: "#/components/schemas/Uuid"
         debit:
           $ref: "#/components/schemas/NonNegativeDecimalString"
+          description: Monto al Debe. Si credit > 0, este valor debe ser "0.00".
         credit:
           $ref: "#/components/schemas/NonNegativeDecimalString"
+          description: Monto al Haber. Si debit > 0, este valor debe ser "0.00".
         memo:
           type: string
 
@@ -1014,7 +1030,7 @@ components:
         currency:
           $ref: "#/components/schemas/Currency"
         recipient_rut:
-          type: string
+          $ref: "#/components/schemas/ChileanRut"
         recipient_name:
           type: string
         subtotal:
@@ -1050,7 +1066,7 @@ components:
           $ref: "#/components/schemas/Currency"
           default: CLP
         recipient_rut:
-          type: string
+          $ref: "#/components/schemas/ChileanRut"
         recipient_name:
           type: string
         subtotal:
