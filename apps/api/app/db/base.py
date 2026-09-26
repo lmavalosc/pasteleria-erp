@@ -1,12 +1,11 @@
 import uuid
 from datetime import datetime, timezone
+
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-class Base(DeclarativeBase):
-    pass
+from app.models.entities import Base
 
 
 class TenantMixin:
@@ -39,3 +38,6 @@ class TimestampMixin(CreatedAtMixin):
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+
+
+__all__ = ["Base", "CreatedAtMixin", "TenantMixin", "TimestampMixin"]
