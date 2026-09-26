@@ -4,10 +4,11 @@ export * from './users';
 export * from './api';
 
 // Export full generated OpenAPI spec contracts
+export type { paths, components, operations } from './openapi';
 export * from './openapi';
 
 // Re-export Schemas from OpenAPI Contract
-import type { components, paths } from './openapi';
+import type { components, paths, operations } from './openapi';
 
 export type Schemas = components['schemas'];
 

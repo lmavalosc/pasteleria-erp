@@ -7,8 +7,13 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@repo/api-client": ["../../packages/api-client/src"],
+      "@repo/api-client/*": ["../../packages/api-client/src/*"],
+      "@repo/shared-types": ["../../packages/shared-types/src"],
+      "@repo/shared-types/*": ["../../packages/shared-types/src/*"]
     }
   },
   "include": [

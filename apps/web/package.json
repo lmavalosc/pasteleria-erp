@@ -14,6 +14,9 @@
     "@pasteleria/api-client": "*",
     "@pasteleria/shared-types": "*",
     "@pasteleria/ui": "*",
+    "@repo/api-client": "*",
+    "@repo/shared-types": "*",
+    "@repo/ui": "*",
     "next": "14.2.33",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

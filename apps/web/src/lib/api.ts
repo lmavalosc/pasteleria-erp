@@ -1,8 +1,9 @@
-import { createFetchClient } from '@pasteleria/api-client';
+import { createApiClient } from "@repo/api-client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || 'default-atelier';
-
-export const apiClient = createFetchClient(API_BASE_URL, {
-  'X-Tenant-ID': TENANT_ID,
+export const api = createApiClient({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
+  tenantId: process.env.NEXT_PUBLIC_TENANT_ID,
 });
+
+// Backward compatibility alias for existing components
+export const apiClient = api;

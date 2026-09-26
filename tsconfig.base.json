@@ -19,10 +19,16 @@
     "paths": {
       "@pasteleria/shared-types": ["packages/shared-types/src"],
       "@pasteleria/shared-types/*": ["packages/shared-types/src/*"],
+      "@repo/shared-types": ["packages/shared-types/src"],
+      "@repo/shared-types/*": ["packages/shared-types/src/*"],
       "@pasteleria/api-client": ["packages/api-client/src"],
       "@pasteleria/api-client/*": ["packages/api-client/src/*"],
+      "@repo/api-client": ["packages/api-client/src"],
+      "@repo/api-client/*": ["packages/api-client/src/*"],
       "@pasteleria/ui": ["packages/ui/src"],
-      "@pasteleria/ui/*": ["packages/ui/src/*"]
+      "@pasteleria/ui/*": ["packages/ui/src/*"],
+      "@repo/ui": ["packages/ui/src"],
+      "@repo/ui/*": ["packages/ui/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", ".next"]
