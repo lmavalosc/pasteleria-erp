@@ -1,28 +1,21 @@
 import os
 
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv()
+from app.core.config import settings
 
 # En runtime de API conectar con app_user para que PostgreSQL fuerce RLS estrictamente
-DATABASE_URL = os.getenv(
-    "APP_DATABASE_URL",
-    os.getenv(
-        "DATABASE_URL",
-        "postgresql+psycopg://app_user:app_password@localhost:5432/nucleo",
-    ),
-)
-
-# Si la cadena apunta al usuario dueño/migrador nucleo, enrutar a app_user para aislamiento RLS
-if "nucleo:nucleo" in DATABASE_URL:
+database_url = os.getenv("APP_DATABASE_URL", settings.database_url)
+if "nucleo:nucleo" in database_url:
     app_db = os.getenv("APP_DATABASE_URL")
-    DATABASE_URL = app_db if app_db else DATABASE_URL.replace("nucleo:nucleo", "app_user:app_password")
+    database_url = app_db if app_db else database_url.replace("nucleo:nucleo", "app_user:app_password")
 
 engine = create_engine(
-    DATABASE_URL,
+    database_url,
     pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
     future=True,
 )
 

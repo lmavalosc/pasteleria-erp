@@ -4,65 +4,96 @@ from typing import Any
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+
+from app.schemas.common import ErrorDetail, ProblemDetail
 
 
-class ProblemDetail(BaseModel):
-    type: str = Field(default="about:blank")
-    title: str
-    status: int
-    detail: str
-    instance: str | None = None
-    invalid_params: list[dict[str, Any]] | None = None
-    errors: list[dict[str, Any]] | None = None
+class DomainError(Exception):
+    def __init__(
+        self,
+        status_code: int = 400,
+        title: str = "Error de dominio",
+        detail: str = "",
+        code: str | None = None,
+        errors: list[ErrorDetail] | None = None,
+    ):
+        self.status_code = status_code
+        self.title = title
+        self.detail = detail
+        self.code = code
+        self.errors = errors or []
+        super().__init__(detail)
+
+    def to_problem_detail(self, instance: str | None = None) -> ProblemDetail:
+        return ProblemDetail(
+            type=f"https://errors.nucleo-contable-dte.local/{self.code or 'domain-error'}",
+            title=self.title,
+            status=self.status_code,
+            detail=self.detail,
+            instance=instance,
+            code=self.code,
+            errors=self.errors,
+        )
 
 
-class DomainException(Exception):
+class DomainException(DomainError):
+    """Clase compatible con las implementaciones iniciales de servicios."""
     def __init__(
         self,
         title: str,
         detail: str,
         status_code: int = 400,
         invalid_params: list[dict[str, Any]] | None = None,
+        code: str | None = None,
     ):
-        self.title = title
-        self.detail = detail
-        self.status_code = status_code
-        self.invalid_params = invalid_params
-        super().__init__(detail)
-
-
-def setup_exception_handlers(app: FastAPI) -> None:
-    @app.exception_handler(DomainException)
-    async def domain_exception_handler(request: Request, exc: DomainException):
-        problem = ProblemDetail(
-            type=f"https://nucleo.local/errors/{exc.title.lower().replace(' ', '-')}",
-            title=exc.title,
-            status=exc.status_code,
-            detail=exc.detail,
-            instance=str(request.url),
-            invalid_params=exc.invalid_params,
+        errors_list: list[ErrorDetail] = []
+        if invalid_params:
+            for p in invalid_params:
+                errors_list.append(ErrorDetail(field=p.get("name"), message=p.get("reason", "")))
+        super().__init__(
+            status_code=status_code,
+            title=title,
+            detail=detail,
+            code=code,
+            errors=errors_list,
         )
-        return JSONResponse(status_code=exc.status_code, content=problem.model_dump(exclude_none=True))
+        self.invalid_params = invalid_params
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(DomainError)
+    async def domain_error_handler(request: Request, exc: DomainError):
+        problem = exc.to_problem_detail(instance=str(request.url.path))
+        if hasattr(exc, "invalid_params") and exc.invalid_params:
+            problem.invalid_params = exc.invalid_params
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=problem.model_dump(exclude_none=True),
+        )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    async def validation_error_handler(request: Request, exc: RequestValidationError):
+        error_details = [
+            ErrorDetail(
+                field=" -> ".join(str(loc) for loc in err["loc"] if loc != "body"),
+                message=err["msg"],
+                code=err.get("type"),
+            )
+            for err in exc.errors()
+        ]
         invalid_params = [
             {"name": " -> ".join(str(loc) for loc in err["loc"]), "reason": err["msg"]}
             for err in exc.errors()
         ]
-        errors = [
-            {"field": " -> ".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
-            for err in exc.errors()
-        ]
         problem = ProblemDetail(
-            type="https://nucleo.local/errors/validation-error",
+            type="https://errors.nucleo-contable-dte.local/validation-error",
             title="Error de validación en la solicitud",
             status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Uno o más campos enviados son inválidos o faltan en el cuerpo/parámetros.",
-            instance=str(request.url),
+            detail="Uno o más campos enviados no cumplen con el formato requerido.",
+            instance=str(request.url.path),
+            code="VALIDATION_ERROR",
+            errors=error_details,
             invalid_params=invalid_params,
-            errors=errors,
         )
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -73,13 +104,18 @@ def setup_exception_handlers(app: FastAPI) -> None:
     async def global_exception_handler(request: Request, exc: Exception):
         error_id = str(uuid.uuid4())
         problem = ProblemDetail(
-            type="https://nucleo.local/errors/internal-server-error",
+            type="https://errors.nucleo-contable-dte.local/internal-server-error",
             title="Error interno del servidor",
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ha ocurrido un error inesperado. Código de seguimiento: {error_id}",
-            instance=str(request.url),
+            instance=str(request.url.path),
+            code="INTERNAL_SERVER_ERROR",
         )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=problem.model_dump(exclude_none=True),
         )
+
+
+# Alias de retrocompatibilidad
+setup_exception_handlers = register_exception_handlers
