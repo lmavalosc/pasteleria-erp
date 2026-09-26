@@ -1,6 +1,7 @@
 from enum import Enum
-from typing import List, Optional
+
 from pydantic import BaseModel, EmailStr, Field
+
 
 # ---------------- Enums ----------------
 class UserRole(str, Enum):
@@ -58,8 +59,8 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=6)
     nombre_completo: str
     razon_social: str
-    rut_o_identificador: Optional[str] = None
-    nombre_fantasia: Optional[str] = None
+    rut_o_identificador: str | None = None
+    nombre_fantasia: str | None = None
 
 class RegisterResponse(BaseModel):
     access_token: str
@@ -71,7 +72,7 @@ class RegisterResponse(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-    tenant_id: Optional[str] = None
+    tenant_id: str | None = None
 
 class LoginResponse(BaseModel):
     access_token: str
@@ -103,7 +104,7 @@ class DocumentResponse(BaseModel):
 
 class ExpenseItemDetail(BaseModel):
     id: str
-    ingredient_id: Optional[str] = None
+    ingredient_id: str | None = None
     nombre_insumo: str
     cantidad: float
     unidad_medida: str
@@ -111,7 +112,7 @@ class ExpenseItemDetail(BaseModel):
     subtotal: float
 
 class ExpenseItemDetailInput(BaseModel):
-    ingredient_id: Optional[str] = None
+    ingredient_id: str | None = None
     nombre_insumo: str
     cantidad: float
     unidad_medida: str
@@ -119,9 +120,9 @@ class ExpenseItemDetailInput(BaseModel):
 
 # ---------------- 15.3 Expense Schemas ----------------
 class ExpenseCreateRequest(BaseModel):
-    folio_comprobante: Optional[str] = None
+    folio_comprobante: str | None = None
     proveedor_nombre: str
-    proveedor_rut: Optional[str] = None
+    proveedor_rut: str | None = None
     fecha_gasto: str # YYYY-MM-DD
     monto_neto: float
     monto_iva: float = 0.0
@@ -129,8 +130,8 @@ class ExpenseCreateRequest(BaseModel):
     moneda: str = "CLP"
     categoria_gasto: ExpenseCategory = ExpenseCategory.MATERIAS_PRIMAS
     metodo_pago: PaymentMethod = PaymentMethod.TRANSFERENCIA
-    document_id: Optional[str] = None
-    insumos_detalle: Optional[List[ExpenseItemDetailInput]] = None
+    document_id: str | None = None
+    insumos_detalle: list[ExpenseItemDetailInput] | None = None
 
 class ExpenseRejectRequest(BaseModel):
     motivo_rechazo: str
@@ -138,9 +139,9 @@ class ExpenseRejectRequest(BaseModel):
 class ExpenseResponse(BaseModel):
     id: str
     tenant_id: str
-    folio_comprobante: Optional[str] = None
+    folio_comprobante: str | None = None
     proveedor_nombre: str
-    proveedor_rut: Optional[str] = None
+    proveedor_rut: str | None = None
     fecha_gasto: str
     monto_neto: float
     monto_iva: float
@@ -149,11 +150,11 @@ class ExpenseResponse(BaseModel):
     categoria_gasto: str
     metodo_pago: str
     estado: str
-    document_id: Optional[str] = None
-    insumos_detalle: List[ExpenseItemDetail] = []
+    document_id: str | None = None
+    insumos_detalle: list[ExpenseItemDetail] = []
     created_by_user_id: str
-    approved_by_user_id: Optional[str] = None
-    motivo_rechazo: Optional[str] = None
+    approved_by_user_id: str | None = None
+    motivo_rechazo: str | None = None
     created_at: str
 
 # ---------------- 15.4 Accounting Schemas ----------------
@@ -169,7 +170,7 @@ class JournalItemInput(BaseModel):
     account_id: str
     debe: float = 0.0
     haber: float = 0.0
-    contacto_rut_o_nombre: Optional[str] = None
+    contacto_rut_o_nombre: str | None = None
 
 class JournalItemResponse(BaseModel):
     id: str
@@ -177,13 +178,13 @@ class JournalItemResponse(BaseModel):
     account_id: str
     debe: float
     haber: float
-    contacto_rut_o_nombre: Optional[str] = None
+    contacto_rut_o_nombre: str | None = None
 
 class JournalEntryCreateRequest(BaseModel):
     fecha_asiento: str # YYYY-MM-DD
     glosa_descripcion: str
-    referencia_origen: Optional[str] = "MANUAL"
-    items: List[JournalItemInput]
+    referencia_origen: str | None = "MANUAL"
+    items: list[JournalItemInput]
 
 class JournalEntryResponse(BaseModel):
     id: str
@@ -193,13 +194,13 @@ class JournalEntryResponse(BaseModel):
     glosa_descripcion: str
     estado: str
     referencia_origen: str
-    items: List[JournalItemResponse]
+    items: list[JournalItemResponse]
     created_at: str
 
 # ---------------- 15.5 DTE Schemas ----------------
 class DTECreateRequest(BaseModel):
     tipo_dte: int # 39: Boleta, 33: Factura, 61: Nota de Credito
-    folio: Optional[int] = None
+    folio: int | None = None
     fecha_emision: str # YYYY-MM-DD
     emisor_rut: str
     receptor_rut: str
@@ -208,7 +209,7 @@ class DTECreateRequest(BaseModel):
     monto_exento: float = 0.0
     monto_iva: float
     monto_total: float
-    order_id: Optional[str] = None
+    order_id: str | None = None
 
 class DTEResponse(BaseModel):
     id: str
@@ -224,7 +225,7 @@ class DTEResponse(BaseModel):
     monto_iva: float
     monto_total: float
     estado_sii: str
-    track_id_sii: Optional[str] = None
-    xml_payload_uri: Optional[str] = None
-    order_id: Optional[str] = None
+    track_id_sii: str | None = None
+    xml_payload_uri: str | None = None
+    order_id: str | None = None
     created_at: str

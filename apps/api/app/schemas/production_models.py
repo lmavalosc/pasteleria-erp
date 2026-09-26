@@ -1,6 +1,7 @@
 from enum import Enum
-from typing import List, Optional
+
 from pydantic import BaseModel, Field
+
 
 class UnitOfMeasure(str, Enum):
     KG = "kg"
@@ -21,21 +22,21 @@ class ProductionOrderStatus(str, Enum):
 class IngredientItem(BaseModel):
     id: str
     tenant_id: str
-    codigo: Optional[str] = None
+    codigo: str | None = None
     nombre: str
     unidad_medida: str
     costo_unitario_promedio: float
     stock_actual: float
-    alergenos: List[str] = Field(default_factory=list)
+    alergenos: list[str] = Field(default_factory=list)
     created_at: str
 
 class IngredientCreateInput(BaseModel):
-    codigo: Optional[str] = None
+    codigo: str | None = None
     nombre: str
     unidad_medida: str = "kg"
     costo_unitario_promedio: float
     stock_actual: float = 0.0
-    alergenos: List[str] = Field(default_factory=list)
+    alergenos: list[str] = Field(default_factory=list)
 
 # Recetas / Escandallos
 class RecipeIngredientItem(BaseModel):
@@ -63,11 +64,11 @@ class Recipe(BaseModel):
     nombre_receta: str
     rendimiento_porciones: float
     tiempo_elaboracion_minutos: int = 60
-    ingredientes: List[RecipeIngredientItem]
-    empaques: List[RecipePackagingItem] = Field(default_factory=list)
+    ingredientes: list[RecipeIngredientItem]
+    empaques: list[RecipePackagingItem] = Field(default_factory=list)
     costo_total_batch: float
     costo_por_porcion: float
-    instrucciones: Optional[str] = None
+    instrucciones: str | None = None
     created_at: str
 
 class RecipeCreateInput(BaseModel):
@@ -75,9 +76,9 @@ class RecipeCreateInput(BaseModel):
     nombre_receta: str
     rendimiento_porciones: float = Field(ge=1.0)
     tiempo_elaboracion_minutos: int = 60
-    ingredientes: List[RecipeIngredientItemInput]
-    empaques: List[RecipePackagingItem] = Field(default_factory=list)
-    instrucciones: Optional[str] = None
+    ingredientes: list[RecipeIngredientItemInput]
+    empaques: list[RecipePackagingItem] = Field(default_factory=list)
+    instrucciones: str | None = None
 
 # Costeo y Rentabilidad
 class ProductCostingAnalysis(BaseModel):
@@ -103,19 +104,19 @@ class ProductionOrder(BaseModel):
     cantidad_a_elaborar: int
     estado: str
     fecha_programada: str
-    fecha_finalizada: Optional[str] = None
-    responsable_chef: Optional[str] = None
+    fecha_finalizada: str | None = None
+    responsable_chef: str | None = None
     inventario_descontado: bool = False
-    notas: Optional[str] = None
+    notas: str | None = None
     created_at: str
 
 class ProductionOrderCreateInput(BaseModel):
     recipe_id: str
     cantidad_a_elaborar: int = Field(ge=1)
     fecha_programada: str
-    responsable_chef: Optional[str] = None
+    responsable_chef: str | None = None
     descontar_inventario_inmediato: bool = False
-    notas: Optional[str] = None
+    notas: str | None = None
 
 class ProductionOrderUpdateStatusInput(BaseModel):
     estado: str

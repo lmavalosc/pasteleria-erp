@@ -1,4 +1,5 @@
 import uuid
+
 from app.core.errors import DomainException
 from app.models.accounting import AccountingAccount, JournalEntry, JournalLine
 from app.repositories.accounting import AccountingRepository

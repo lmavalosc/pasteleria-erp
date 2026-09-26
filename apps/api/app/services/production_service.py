@@ -1,26 +1,25 @@
-from typing import Dict, List, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+
 from app.schemas.production_models import (
     IngredientCreateInput,
-    RecipeCreateInput,
-    RecipePackagingItem,
-    RecipeIngredientItem,
     ProductionOrderCreateInput,
+    RecipeCreateInput,
 )
+
 
 class ProductionStore:
     def __init__(self):
         # tenant_id -> {id: ingredient_dict}
-        self.ingredients: Dict[str, Dict[str, dict]] = {}
+        self.ingredients: dict[str, dict[str, dict]] = {}
         # tenant_id -> {id: recipe_dict}
-        self.recipes: Dict[str, Dict[str, dict]] = {}
+        self.recipes: dict[str, dict[str, dict]] = {}
         # tenant_id -> {product_id: product_dict}
-        self.products: Dict[str, Dict[str, dict]] = {}
+        self.products: dict[str, dict[str, dict]] = {}
         # tenant_id -> {id: order_dict}
-        self.orders: Dict[str, Dict[str, dict]] = {}
+        self.orders: dict[str, dict[str, dict]] = {}
         # tenant_id -> int
-        self.order_counter: Dict[str, int] = {}
+        self.order_counter: dict[str, int] = {}
 
     def _ensure_tenant(self, tenant_id: str):
         if tenant_id not in self.ingredients:
@@ -55,11 +54,11 @@ class ProductionStore:
         self.ingredients[tenant_id][ing_id] = item
         return item
 
-    def get_ingredient(self, tenant_id: str, ing_id: str) -> Optional[dict]:
+    def get_ingredient(self, tenant_id: str, ing_id: str) -> dict | None:
         self._ensure_tenant(tenant_id)
         return self.ingredients[tenant_id].get(ing_id)
 
-    def find_ingredient_by_name(self, tenant_id: str, name: str) -> Optional[dict]:
+    def find_ingredient_by_name(self, tenant_id: str, name: str) -> dict | None:
         self._ensure_tenant(tenant_id)
         name_clean = name.strip().lower()
         for item in self.ingredients[tenant_id].values():
@@ -67,7 +66,7 @@ class ProductionStore:
                 return item
         return None
 
-    def list_ingredients(self, tenant_id: str, search: Optional[str] = None) -> List[dict]:
+    def list_ingredients(self, tenant_id: str, search: str | None = None) -> list[dict]:
         self._ensure_tenant(tenant_id)
         items = list(self.ingredients[tenant_id].values())
         if search:
@@ -78,7 +77,7 @@ class ProductionStore:
     def apply_purchase_ppp(
         self,
         tenant_id: str,
-        ingredient_id: Optional[str],
+        ingredient_id: str | None,
         nombre_insumo: str,
         cantidad_comprada: float,
         precio_unitario_compra: float,
@@ -200,18 +199,18 @@ class ProductionStore:
         self.recipes[tenant_id][rec_id] = recipe
         return recipe
 
-    def get_recipe(self, tenant_id: str, recipe_id: str) -> Optional[dict]:
+    def get_recipe(self, tenant_id: str, recipe_id: str) -> dict | None:
         self._ensure_tenant(tenant_id)
         return self.recipes[tenant_id].get(recipe_id)
 
-    def get_recipe_by_product(self, tenant_id: str, product_id: str) -> Optional[dict]:
+    def get_recipe_by_product(self, tenant_id: str, product_id: str) -> dict | None:
         self._ensure_tenant(tenant_id)
         for r in self.recipes[tenant_id].values():
             if r["product_id"] == product_id:
                 return r
         return None
 
-    def list_recipes(self, tenant_id: str, product_id: Optional[str] = None) -> List[dict]:
+    def list_recipes(self, tenant_id: str, product_id: str | None = None) -> list[dict]:
         self._ensure_tenant(tenant_id)
         items = list(self.recipes[tenant_id].values())
         if product_id:
@@ -418,7 +417,7 @@ class ProductionStore:
 
         order["inventario_descontado"] = True
 
-    def list_orders(self, tenant_id: str, estado: Optional[str] = None) -> List[dict]:
+    def list_orders(self, tenant_id: str, estado: str | None = None) -> list[dict]:
         self._ensure_tenant(tenant_id)
         items = list(self.orders[tenant_id].values())
         if estado:
@@ -426,7 +425,7 @@ class ProductionStore:
             items = [o for o in items if o["estado"] == norm]
         return items
 
-    def get_order(self, tenant_id: str, order_id: str) -> Optional[dict]:
+    def get_order(self, tenant_id: str, order_id: str) -> dict | None:
         self._ensure_tenant(tenant_id)
         return self.orders[tenant_id].get(order_id)
 

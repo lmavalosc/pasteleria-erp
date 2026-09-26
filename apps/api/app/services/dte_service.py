@@ -1,14 +1,15 @@
-from typing import Dict, Optional, List
-from datetime import datetime
 import uuid
-from app.schemas.core_models import DTECreateRequest, DTEState, TipoDTE
+from datetime import datetime
+
+from app.schemas.core_models import DTECreateRequest, DTEState
 from app.services.dte_provider import dte_provider
+
 
 class DTEStore:
     def __init__(self):
-        self.dtes: Dict[str, dict] = {} # id -> dte
+        self.dtes: dict[str, dict] = {} # id -> dte
         # (tenant_id, tipo_dte) -> last_folio
-        self.folios: Dict[tuple, int] = {}
+        self.folios: dict[tuple, int] = {}
 
     def get_next_folio(self, tenant_id: str, tipo_dte: int) -> int:
         key = (tenant_id, tipo_dte)
@@ -42,7 +43,7 @@ class DTEStore:
         self.dtes[dte_id] = dte
         return dte
 
-    def get_by_id(self, dte_id: str, tenant_id: str) -> Optional[dict]:
+    def get_by_id(self, dte_id: str, tenant_id: str) -> dict | None:
         d = self.dtes.get(dte_id)
         if d and d["tenant_id"] == tenant_id:
             return d
@@ -51,13 +52,13 @@ class DTEStore:
     def list_dtes(
         self,
         tenant_id: str,
-        tipo_dte: Optional[int] = None,
-        estado_sii: Optional[str] = None,
-        fecha_desde: Optional[str] = None,
-        fecha_hasta: Optional[str] = None,
+        tipo_dte: int | None = None,
+        estado_sii: str | None = None,
+        fecha_desde: str | None = None,
+        fecha_hasta: str | None = None,
         page: int = 1,
         page_size: int = 20
-    ) -> List[dict]:
+    ) -> list[dict]:
         res = [d for d in self.dtes.values() if d["tenant_id"] == tenant_id]
         if tipo_dte:
             res = [d for d in res if d["tipo_dte"] == tipo_dte]

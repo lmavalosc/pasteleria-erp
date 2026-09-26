@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Query
-from typing import List, Optional
-from app.schemas.core_models import (
-    DTECreateRequest, DTEResponse, UserRole
-)
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 from app.core.deps import get_current_context, require_roles
+from app.schemas.core_models import DTECreateRequest, DTEResponse, UserRole
 from app.services.dte_service import dte_store
 
 router = APIRouter(prefix="/v1/dte", tags=["dte"])
@@ -30,12 +29,12 @@ def emit_dte(
             detail=str(e)
         )
 
-@router.get("", response_model=List[DTEResponse])
+@router.get("", response_model=list[DTEResponse])
 def list_dtes(
-    tipo_dte: Optional[int] = Query(None, description="39: Boleta, 33: Factura, 61: Nota Credito"),
-    estado_sii: Optional[str] = Query(None, description="draft, generated, sent_to_sii, accepted_by_sii, rejected_by_sii"),
-    fecha_desde: Optional[str] = Query(None, description="YYYY-MM-DD"),
-    fecha_hasta: Optional[str] = Query(None, description="YYYY-MM-DD"),
+    tipo_dte: int | None = Query(None, description="39: Boleta, 33: Factura, 61: Nota Credito"),
+    estado_sii: str | None = Query(None, description="draft, generated, sent_to_sii, accepted_by_sii, rejected_by_sii"),
+    fecha_desde: str | None = Query(None, description="YYYY-MM-DD"),
+    fecha_hasta: str | None = Query(None, description="YYYY-MM-DD"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     context: TenantContext = Depends(get_current_context)

@@ -1,12 +1,16 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.core.deps import TenantContext, get_current_context
+from app.core.security import create_access_token, verify_password
 from app.schemas.core_models import (
-    RegisterRequest, RegisterResponse,
-    LoginRequest, LoginResponse,
-    SwitchTenantRequest, SwitchTenantResponse
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest,
+    RegisterResponse,
+    SwitchTenantRequest,
+    SwitchTenantResponse,
 )
 from app.services.tenant_service import tenant_store
-from app.core.security import verify_password, create_access_token
-from app.core.deps import get_current_context, TenantContext
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
 

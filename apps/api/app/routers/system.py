@@ -1,8 +1,10 @@
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
 from app.api.deps import get_db_with_tenant, get_tenant_id_from_header
 from app.repositories.accounting import AccountingRepository
 

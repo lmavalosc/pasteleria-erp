@@ -1,13 +1,14 @@
-from typing import Dict, Optional, List
-from datetime import datetime
 import uuid
-from app.core.security import get_password_hash, verify_password
+from datetime import datetime
+
+from app.core.security import get_password_hash
+
 
 class TenantStore:
     def __init__(self):
-        self.tenants: Dict[str, dict] = {}
-        self.users: Dict[str, dict] = {}
-        self.memberships: Dict[str, dict] = {} # id -> membership
+        self.tenants: dict[str, dict] = {}
+        self.users: dict[str, dict] = {}
+        self.memberships: dict[str, dict] = {} # id -> membership
 
         # Initial demo tenant & user for immediate local testing
         default_user_id = str(uuid.uuid4())
@@ -38,25 +39,25 @@ class TenantStore:
             "created_at": datetime.utcnow().isoformat()
         }
 
-    def get_user_by_email(self, email: str) -> Optional[dict]:
+    def get_user_by_email(self, email: str) -> dict | None:
         for u in self.users.values():
             if u["email"].lower() == email.lower():
                 return u
         return None
 
-    def get_user_by_id(self, user_id: str) -> Optional[dict]:
+    def get_user_by_id(self, user_id: str) -> dict | None:
         return self.users.get(user_id)
 
-    def get_membership(self, tenant_id: str, user_id: str) -> Optional[dict]:
+    def get_membership(self, tenant_id: str, user_id: str) -> dict | None:
         for m in self.memberships.values():
             if m["tenant_id"] == tenant_id and m["user_id"] == user_id:
                 return m
         return None
 
-    def get_user_memberships(self, user_id: str) -> List[dict]:
+    def get_user_memberships(self, user_id: str) -> list[dict]:
         return [m for m in self.memberships.values() if m["user_id"] == user_id]
 
-    def create_user_and_tenant(self, email: str, password: str, nombre_completo: str, razon_social: str, rut_o_identificador: Optional[str] = None, nombre_fantasia: Optional[str] = None):
+    def create_user_and_tenant(self, email: str, password: str, nombre_completo: str, razon_social: str, rut_o_identificador: str | None = None, nombre_fantasia: str | None = None):
         user_id = str(uuid.uuid4())
         tenant_id = str(uuid.uuid4())
         mem_id = str(uuid.uuid4())

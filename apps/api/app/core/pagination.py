@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
@@ -21,6 +21,6 @@ class Page(BaseModel, Generic[T]):
     total_pages: int
     pages: int | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context: Any, /) -> None:
         if self.pages is None:
             self.pages = self.total_pages

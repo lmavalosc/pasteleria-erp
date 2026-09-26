@@ -1,10 +1,10 @@
-from typing import Dict, Optional, List
-from datetime import datetime
 import uuid
+from datetime import datetime
+
 
 class DocumentStore:
     def __init__(self):
-        self.documents: Dict[str, dict] = {} # id -> doc
+        self.documents: dict[str, dict] = {} # id -> doc
 
     def save_metadata(
         self,
@@ -31,7 +31,7 @@ class DocumentStore:
         self.documents[doc_id] = doc
         return doc
 
-    def get_by_id(self, doc_id: str, tenant_id: str) -> Optional[dict]:
+    def get_by_id(self, doc_id: str, tenant_id: str) -> dict | None:
         doc = self.documents.get(doc_id)
         if doc and doc["tenant_id"] == tenant_id:
             return doc

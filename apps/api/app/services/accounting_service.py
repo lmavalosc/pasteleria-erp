@@ -1,8 +1,12 @@
-from typing import Dict, Optional, List
+import uuid
 from datetime import datetime
 from decimal import Decimal
-import uuid
-from app.schemas.core_models import AccountType, AccountResponse, JournalEntryCreateRequest, JournalEntryState
+
+from app.schemas.core_models import (
+    AccountType,
+    JournalEntryCreateRequest,
+    JournalEntryState,
+)
 
 # Standard Chilean chart of accounts template
 CHILEAN_DEFAULT_ACCOUNTS = [
@@ -32,11 +36,11 @@ CHILEAN_DEFAULT_ACCOUNTS = [
 
 class AccountingStore:
     def __init__(self):
-        self.accounts: Dict[str, dict] = {} # id -> account
-        self.entries: Dict[str, dict] = {} # id -> entry
-        self.correlatives: Dict[str, int] = {} # tenant_id -> current_number
+        self.accounts: dict[str, dict] = {} # id -> account
+        self.entries: dict[str, dict] = {} # id -> entry
+        self.correlatives: dict[str, int] = {} # tenant_id -> current_number
 
-    def seed_defaults(self, tenant_id: str) -> List[dict]:
+    def seed_defaults(self, tenant_id: str) -> list[dict]:
         existing_codes = {a["codigo"] for a in self.accounts.values() if a["tenant_id"] == tenant_id}
         created = []
         for tpl in CHILEAN_DEFAULT_ACCOUNTS:
@@ -54,7 +58,7 @@ class AccountingStore:
                 created.append(acc)
         return created
 
-    def list_accounts(self, tenant_id: str) -> List[dict]:
+    def list_accounts(self, tenant_id: str) -> list[dict]:
         accs = [a for a in self.accounts.values() if a["tenant_id"] == tenant_id]
         if not accs:
             # Seed automatically on first read if empty
@@ -62,7 +66,7 @@ class AccountingStore:
         accs.sort(key=lambda x: x["codigo"])
         return accs
 
-    def get_account_by_id(self, acc_id: str, tenant_id: str) -> Optional[dict]:
+    def get_account_by_id(self, acc_id: str, tenant_id: str) -> dict | None:
         acc = self.accounts.get(acc_id)
         if acc and acc["tenant_id"] == tenant_id:
             return acc
@@ -98,7 +102,7 @@ class AccountingStore:
         self.entries[entry_id] = entry
         return entry
 
-    def get_entry(self, entry_id: str, tenant_id: str) -> Optional[dict]:
+    def get_entry(self, entry_id: str, tenant_id: str) -> dict | None:
         e = self.entries.get(entry_id)
         if e and e["tenant_id"] == tenant_id:
             return e

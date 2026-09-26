@@ -1,4 +1,5 @@
 from uuid import UUID
+
 from app.core.errors import DomainException
 
 

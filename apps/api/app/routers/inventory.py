@@ -1,17 +1,18 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
-from app.core.deps import get_current_context, TenantContext
+
+from app.core.deps import TenantContext, get_current_context
 from app.schemas.production_models import (
-    IngredientItem,
     IngredientCreateInput,
+    IngredientItem,
 )
 from app.services.production_service import production_store
 
 router = APIRouter(prefix="/inventory/ingredients", tags=["Producción y Costeo"])
 
-@router.get("", response_model=List[IngredientItem])
+@router.get("", response_model=list[IngredientItem])
 def list_ingredients(
-    search: Optional[str] = None,
+    search: str | None = None,
     context: TenantContext = Depends(get_current_context)
 ):
     items = production_store.list_ingredients(tenant_id=context.tenant_id, search=search)

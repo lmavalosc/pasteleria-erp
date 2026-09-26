@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Annotated
+
 from pydantic import PlainSerializer
 
 # Serializa Decimal como string de dos decimales (ej. "15000.00")

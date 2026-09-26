@@ -1,4 +1,5 @@
 import uuid
+
 from app.core.errors import DomainException
 from app.models.operations import Expense
 from app.repositories.documents import DocumentRepository

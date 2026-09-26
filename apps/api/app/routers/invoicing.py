@@ -1,8 +1,10 @@
 import math
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
+
 from app.api.deps import get_db_with_tenant, get_tenant_id_from_header
 from app.core.pagination import Page, PageParams
 from app.integrations.sii.adapter import get_sii_client
@@ -16,8 +18,8 @@ router = APIRouter(prefix="/invoicing", tags=["invoicing"])
 @router.post("/dte", response_model=DteInvoiceRead, status_code=status.HTTP_201_CREATED)
 def emit_dte(
     data: DteEmissionRequest,
-    tenant_id: UUID = Depends(get_tenant_id_from_header),
-    db: Session = Depends(get_db_with_tenant),
+    tenant_id: Annotated[UUID, Depends(get_tenant_id_from_header)],
+    db: Annotated[Session, Depends(get_db_with_tenant)],
 ):
     # En producción el RUT emisor se extrae del tenant activo
     emitter_rut = "76000000-9"
@@ -28,7 +30,7 @@ def emit_dte(
 @router.get("/dte", response_model=Page[DteInvoiceRead])
 def list_invoices(
     params: Annotated[PageParams, Depends()],
-    db: Session = Depends(get_db_with_tenant),
+    db: Annotated[Session, Depends(get_db_with_tenant)],
 ):
     repo = InvoicingRepository(db)
     items, total = repo.list_paginated(params.offset, params.page_size)

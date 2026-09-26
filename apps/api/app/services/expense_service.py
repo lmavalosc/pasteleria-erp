@@ -1,12 +1,13 @@
-from typing import Dict, Optional, List
-from datetime import datetime
 import uuid
+from datetime import datetime
+
 from app.schemas.core_models import ExpenseCreateRequest, ExpenseState
 from app.services.production_service import production_store
 
+
 class ExpenseStore:
     def __init__(self):
-        self.expenses: Dict[str, dict] = {} # id -> expense
+        self.expenses: dict[str, dict] = {} # id -> expense
 
     def create(self, tenant_id: str, user_id: str, data: ExpenseCreateRequest) -> dict:
         exp_id = str(uuid.uuid4())
@@ -63,7 +64,7 @@ class ExpenseStore:
         self.expenses[exp_id] = expense
         return expense
 
-    def get_by_id(self, exp_id: str, tenant_id: str) -> Optional[dict]:
+    def get_by_id(self, exp_id: str, tenant_id: str) -> dict | None:
         exp = self.expenses.get(exp_id)
         if exp and exp["tenant_id"] == tenant_id:
             return exp
@@ -72,13 +73,13 @@ class ExpenseStore:
     def list_expenses(
         self,
         tenant_id: str,
-        estado: Optional[str] = None,
-        categoria: Optional[str] = None,
-        fecha_desde: Optional[str] = None,
-        fecha_hasta: Optional[str] = None,
+        estado: str | None = None,
+        categoria: str | None = None,
+        fecha_desde: str | None = None,
+        fecha_hasta: str | None = None,
         page: int = 1,
         page_size: int = 20
-    ) -> List[dict]:
+    ) -> list[dict]:
         res = [e for e in self.expenses.values() if e["tenant_id"] == tenant_id]
         if estado:
             res = [e for e in res if e["estado"] == estado]
@@ -93,7 +94,7 @@ class ExpenseStore:
         start = (page - 1) * page_size
         return res[start:start + page_size]
 
-    def approve(self, exp_id: str, tenant_id: str, approver_user_id: str) -> Optional[dict]:
+    def approve(self, exp_id: str, tenant_id: str, approver_user_id: str) -> dict | None:
         exp = self.get_by_id(exp_id, tenant_id)
         if not exp:
             return None
@@ -101,7 +102,7 @@ class ExpenseStore:
         exp["approved_by_user_id"] = approver_user_id
         return exp
 
-    def reject(self, exp_id: str, tenant_id: str, approver_user_id: str, motivo: str) -> Optional[dict]:
+    def reject(self, exp_id: str, tenant_id: str, approver_user_id: str, motivo: str) -> dict | None:
         exp = self.get_by_id(exp_id, tenant_id)
         if not exp:
             return None

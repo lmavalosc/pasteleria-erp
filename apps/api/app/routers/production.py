@@ -1,13 +1,14 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
-from app.core.deps import get_current_context, TenantContext
+
+from app.core.deps import TenantContext, get_current_context
 from app.schemas.production_models import (
-    Recipe,
-    RecipeCreateInput,
     ProductCostingAnalysis,
     ProductionOrder,
     ProductionOrderCreateInput,
     ProductionOrderUpdateStatusInput,
+    Recipe,
+    RecipeCreateInput,
 )
 from app.services.production_service import production_store
 
@@ -16,9 +17,9 @@ router = APIRouter(prefix="/production", tags=["Producción y Costeo"])
 # -----------------------------------------------------------------
 # 1. Recetas / Escandallos
 # -----------------------------------------------------------------
-@router.get("/recipes", response_model=List[Recipe])
+@router.get("/recipes", response_model=list[Recipe])
 def list_recipes(
-    productId: Optional[str] = None,
+    productId: str | None = None,
     context: TenantContext = Depends(get_current_context)
 ):
     recipes = production_store.list_recipes(tenant_id=context.tenant_id, product_id=productId)
@@ -68,9 +69,9 @@ def get_product_costing(
 # -----------------------------------------------------------------
 # 3. Órdenes de Producción
 # -----------------------------------------------------------------
-@router.get("/orders", response_model=List[ProductionOrder])
+@router.get("/orders", response_model=list[ProductionOrder])
 def list_production_orders(
-    estado: Optional[str] = None,
+    estado: str | None = None,
     context: TenantContext = Depends(get_current_context)
 ):
     orders = production_store.list_orders(tenant_id=context.tenant_id, estado=estado)

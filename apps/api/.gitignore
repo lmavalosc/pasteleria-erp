@@ -2,11 +2,14 @@
 .env.*
 .venv/
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
+*.py[cod]
 .pytest_cache/
-storage_data/
-storage/
+.ruff_cache/
 var/
+var/uploads/
+storage/
+storage_data/
 *.pdf
 *.xml

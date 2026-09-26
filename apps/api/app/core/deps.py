@@ -1,7 +1,8 @@
-from typing import Optional
-from fastapi import Header, HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from fastapi import Depends, Header, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
+
 from app.core.security import decode_access_token
 
 security = HTTPBearer(auto_error=False)
@@ -10,12 +11,12 @@ class TenantContext(BaseModel):
     user_id: str
     tenant_id: str
     role: str
-    email: Optional[str] = None
+    email: str | None = None
     is_development_fallback: bool = False
 
 def get_current_context(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    x_tenant_id: Optional[str] = Header(default=None)
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    x_tenant_id: str | None = Header(default=None)
 ) -> TenantContext:
     """
     Regla arquitectonica:
@@ -48,7 +49,7 @@ def get_current_context(
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Token expirado o no autorizado: {str(e)}"
+                detail=f"Token expirado o no autorizado: {e!s}"
             )
 
     # Fallback exclusivo para llamadas internas de desarrollo
