@@ -22,11 +22,13 @@ class ExpenseService:
                     404,
                 )
 
+        from decimal import Decimal
+
         expense = Expense(
             id=uuid.uuid4(),
             tenant_id=tenant_id,
             expense_date=data.expense_date,
-            amount=data.amount,
+            amount=Decimal(str(data.amount)),
             currency=data.currency,
             status="draft",
             document_id=data.document_id,

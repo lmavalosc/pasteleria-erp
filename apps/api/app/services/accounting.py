@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from app.core.errors import DomainException
 from app.models.accounting import AccountingAccount, JournalEntry, JournalLine
@@ -46,8 +47,8 @@ class AccountingService:
                     400,
                 )
 
-        total_debit = sum(line.debit for line in data.lines)
-        total_credit = sum(line.credit for line in data.lines)
+        total_debit = sum(Decimal(str(line.debit)) for line in data.lines)
+        total_credit = sum(Decimal(str(line.credit)) for line in data.lines)
 
         entry_id = uuid.uuid4()
         entry = JournalEntry(
@@ -67,8 +68,8 @@ class AccountingService:
                     tenant_id=tenant_id,
                     entry_id=entry_id,
                     account_id=line.account_id,
-                    debit=line.debit,
-                    credit=line.credit,
+                    debit=Decimal(str(line.debit)),
+                    credit=Decimal(str(line.credit)),
                     memo=line.memo,
                 )
             )

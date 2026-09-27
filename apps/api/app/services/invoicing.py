@@ -24,15 +24,21 @@ class InvoicingService:
                 409,
             )
 
+        from decimal import Decimal
+
+        net_val = Decimal(str(data.subtotal)) if data.subtotal is not None else Decimal("0.00")
+        tax_val = Decimal(str(data.tax_amount)) if data.tax_amount is not None else Decimal("0.00")
+        tot_val = Decimal(str(data.total))
+
         # 1. Llamada a la integración SII aislada
         sii_payload = SIIDtePayload(
-            dte_type=data.dte_type,
+            dte_type=str_dte_type,
             folio=data.folio,
             emitter_rut=emitter_rut,
-            receiver_rut=data.receiver_rut,
-            net_amount=data.subtotal,
-            tax_amount=data.tax_amount,
-            total_amount=data.total,
+            receiver_rut=data.receiver_rut or "",
+            net_amount=net_val,
+            tax_amount=tax_val,
+            total_amount=tot_val,
         )
         sii_res = self.sii_client.emit_dte(sii_payload)
 
@@ -47,9 +53,9 @@ class InvoicingService:
             currency=data.currency,
             recipient_rut=data.receiver_rut,
             recipient_name=data.receiver_name,
-            subtotal=data.subtotal,
-            tax_amount=data.tax_amount,
-            total=data.total,
+            subtotal=net_val,
+            tax_amount=tax_val,
+            total=tot_val,
             sii_receipt_uri=sii_res.sii_receipt_uri,
             sii_track_id=sii_res.track_id,
             emitted_at=datetime.now(timezone.utc),
