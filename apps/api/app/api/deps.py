@@ -11,19 +11,23 @@ from app.core.db import SessionLocal
 def get_db():
     """
     Abre una sesión SQLAlchemy dentro de una transacción.
-    SET LOCAL requiere una transacción activa (with session.begin()).
+
+    SET LOCAL requiere transacción activa.
     """
-    with SessionLocal() as session:
-        with session.begin():
-            yield session
+    with SessionLocal() as session, session.begin():
+        yield session
 
 
 def get_tenant_id_from_header(
     x_tenant_id: Annotated[str | None, Header(alias="X-Tenant-ID")] = None,
 ) -> UUID:
     """
-    Fase 1 / Desarrollo:
-    El tenant llega mediante el encabezado HTTP X-Tenant-ID.
+    Desarrollo/Fase 1:
+    El tenant llega por header X-Tenant-ID.
+
+    Producción:
+    Este dependency debe reemplazarse por uno que derive tenant
+    desde autenticación y memberships.
     """
     if not x_tenant_id:
         raise HTTPException(
@@ -40,23 +44,20 @@ def get_tenant_id_from_header(
         )
 
 
-# Alias para compatibilidad
-get_current_tenant_id = get_tenant_id_from_header
-
-
 def get_db_with_tenant(
     db: Annotated[Session, Depends(get_db)],
     tenant_id: Annotated[UUID, Depends(get_tenant_id_from_header)],
 ) -> Session:
     """
-    Inyecta la sesión de base de datos con el contexto de tenant activo en PostgreSQL.
-    set_config con is_local=true aplica la variable de sesión únicamente a la transacción actual.
+    Inyecta sesión DB con tenant context activo para RLS.
     """
     db.execute(
-        text(
-            "SELECT set_config('app.tenant_id', :tenant_id, true), "
-            "set_config('app.current_tenant_id', :tenant_id, true);"
-        ),
+        text("SELECT set_config('app.tenant_id', :tenant_id, true)"),
         {"tenant_id": str(tenant_id)},
     )
     return db
+
+
+DbTenant = Annotated[Session, Depends(get_db_with_tenant)]
+TenantId = Annotated[UUID, Depends(get_tenant_id_from_header)]
+get_current_tenant_id = get_tenant_id_from_header
