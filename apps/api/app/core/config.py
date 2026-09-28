@@ -1,8 +1,13 @@
+import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_API_DIR = Path(__file__).resolve().parents[2]
+_ENV_FILE = _API_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -17,6 +22,21 @@ class Settings(BaseSettings):
     storage_local_dir: str = "var/uploads"
 
     cors_origins: list[str] = ["*"]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            v_str = v.strip()
+            if v_str.startswith("[") and v_str.endswith("]"):
+                try:
+                    return json.loads(v_str)
+                except Exception:
+                    pass
+            return [i.strip() for i in v_str.split(",") if i.strip()]
+        if isinstance(v, list):
+            return v
+        return ["*"]
 
     sii_enabled: bool = False
     sii_use_legacy: bool = False
@@ -90,7 +110,7 @@ class Settings(BaseSettings):
         return self.access_token_expire_minutes
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(_ENV_FILE) if _ENV_FILE.exists() else ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )

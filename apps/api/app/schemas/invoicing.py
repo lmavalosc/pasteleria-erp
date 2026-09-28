@@ -49,14 +49,14 @@ NonNegativeDecimalStr = Annotated[
 
 class DteInvoiceCreate(BaseModel):
     dte_type: DteType | str
-    folio: int = Field(gt=0)
+    folio: int | None = Field(default=None, gt=0)
     issue_date: date
     currency: Currency = "CLP"
     recipient_rut: str | None = None
     recipient_name: str | None = None
-    subtotal: NonNegativeDecimalStr | None = None
-    tax_amount: NonNegativeDecimalStr | None = None
-    total: NonNegativeDecimalStr
+    subtotal: NonNegativeDecimalStr | int | None = None
+    tax_amount: NonNegativeDecimalStr | int | None = None
+    total: NonNegativeDecimalStr | int
 
     @model_validator(mode="before")
     @classmethod

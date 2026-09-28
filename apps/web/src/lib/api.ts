@@ -1,9 +1,9 @@
-import { createApiClient } from "@pasteleria/api-client";
+import { createClient, client, createApiClient } from "@repo/api-client";
 
 export const api = createApiClient({
   baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
-  tenantId: process.env.NEXT_PUBLIC_TENANT_ID,
+  tenantId: process.env.NEXT_PUBLIC_TENANT_ID ?? "00000000-0000-0000-0000-000000000001",
 });
 
-// Backward compatibility alias for existing components
 export const apiClient = api;
+export { client, createClient };

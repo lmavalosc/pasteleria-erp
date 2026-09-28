@@ -25,7 +25,7 @@
     "react-dom": "^18.2.0 || ^19.0.0"
   },
   "dependencies": {
-    "@pasteleria/shared-types": "*"
+    "@pasteleria/shared-types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.2.79",

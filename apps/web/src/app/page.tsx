@@ -1,49 +1,25 @@
-import { api } from "@/lib/api";
-import { unwrap, ApiError } from "@pasteleria/api-client";
+import Link from 'next/link';
 
-export const dynamic = 'force-dynamic';
-
-export default async function Home() {
-  try {
-    const health = unwrap(await api.GET("/health"));
-
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-neutral-50 text-neutral-900">
-        <h1 className="mb-4 text-2xl font-bold">
-          Paso 2 — Contrato OpenAPI conectado a Web
-        </h1>
-
-        <div className="w-full max-w-xl rounded border border-green-300 bg-green-50 p-4 text-green-900 shadow-sm">
-          <p className="font-semibold flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-            API OK
-          </p>
-          <pre className="mt-2 overflow-auto text-sm bg-white/70 p-3 rounded border border-green-200">
-            {JSON.stringify(health, null, 2)}
-          </pre>
-        </div>
-      </main>
-    );
-  } catch (error) {
-    const message =
-      error instanceof ApiError
-        ? `${error.message} (status ${error.status})`
-        : String(error);
-
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-neutral-50 text-neutral-900">
-        <h1 className="mb-4 text-2xl font-bold">
-          Paso 2 — Contrato OpenAPI conectado a Web
-        </h1>
-
-        <div className="w-full max-w-xl rounded border border-red-300 bg-red-50 p-4 text-red-900 shadow-sm">
-          <p className="font-semibold flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-            Error conectando con API
-          </p>
-          <p className="mt-2 text-sm">{message}</p>
-        </div>
-      </main>
-    );
-  }
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-900 p-8">
+      <h1 className="text-4xl font-bold mb-4">Ncleo Contable ERP</h1>
+      <p className="mb-8 text-gray-600">Bienvenido al sistema de gestin (Fase 1).</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full">
+        <Link href="/accounting" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition">
+          <h2 className="text-xl font-semibold mb-2">Contabilidad</h2>
+          <p className="text-sm text-gray-500">Plan de cuentas, asientos de partida doble, balances.</p>
+        </Link>
+        <Link href="/invoices" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition">
+          <h2 className="text-xl font-semibold mb-2">Facturacin / DTE</h2>
+          <p className="text-sm text-gray-500">Emisin de facturas, CAF, folios.</p>
+        </Link>
+        <Link href="/expenses" className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition">
+          <h2 className="text-xl font-semibold mb-2">Gastos</h2>
+          <p className="text-sm text-gray-500">Registro de gastos y digitalizacin de comprobantes.</p>
+        </Link>
+      </div>
+    </div>
+  );
 }

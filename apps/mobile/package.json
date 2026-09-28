@@ -13,8 +13,8 @@
     "clean": "rimraf .expo dist .turbo"
   },
   "dependencies": {
-    "@pasteleria/api-client": "*",
-    "@pasteleria/shared-types": "*",
+    "@pasteleria/api-client": "workspace:*",
+    "@pasteleria/shared-types": "workspace:*",
     "expo": "^51.0.0",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",

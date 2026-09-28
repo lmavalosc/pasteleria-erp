@@ -1,12 +1,14 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Maison du Délice | Alta Pastelería & Repostería de Autor',
-  description: 'Descubre nuestra exclusiva colección de pasteles de autor, tartas finas, macarons parisinos y viennoiserie artesanal horneada a diario.',
-  keywords: ['pasteleria', 'alta reposteria', 'tartas artesanales', 'macarons', 'pasteles a medida', 'gourmet'],
-  authors: [{ name: 'Maison du Délice Atelier' }],
-  viewport: 'width=device-width, initial-scale=1',
+  title: 'Núcleo Contable ERP',
+  description: 'Sistema de gestión contable, facturación electrónica y gastos',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -15,12 +17,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>{children}</body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

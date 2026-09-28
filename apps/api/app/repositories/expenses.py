@@ -1,12 +1,13 @@
 import uuid
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.models.operations import Expense
+from app.models.entities import Expense
 
 
 class ExpenseRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, tenant_id: uuid.UUID | None = None):
         self.db = db
+        self.tenant_id = tenant_id
 
     def create(self, expense: Expense) -> Expense:
         self.db.add(expense)
@@ -14,12 +15,20 @@ class ExpenseRepository:
         return expense
 
     def get_by_id(self, expense_id: uuid.UUID) -> Expense | None:
-        return self.db.query(Expense).filter(Expense.id == expense_id).first()
+        q = self.db.query(Expense).filter(Expense.id == expense_id)
+        if self.tenant_id:
+            q = q.filter(Expense.tenant_id == self.tenant_id)
+        return q.first()
 
     def list_paginated(self, offset: int, limit: int) -> tuple[list[Expense], int]:
-        total = self.db.query(func.count(Expense.id)).scalar() or 0
+        count_q = self.db.query(func.count(Expense.id))
+        items_q = self.db.query(Expense)
+        if self.tenant_id:
+            count_q = count_q.filter(Expense.tenant_id == self.tenant_id)
+            items_q = items_q.filter(Expense.tenant_id == self.tenant_id)
+        total = count_q.scalar() or 0
         items = (
-            self.db.query(Expense)
+            items_q
             .order_by(Expense.expense_date.desc(), Expense.created_at.desc())
             .offset(offset)
             .limit(limit)

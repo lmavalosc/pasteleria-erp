@@ -1,42 +1,55 @@
-import math
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Header, Query
 
-from app.api.deps import get_db_with_tenant, get_tenant_id_from_header
-from app.core.pagination import Page, PageParams
-from app.repositories.documents import DocumentRepository
-from app.repositories.expenses import ExpenseRepository
-from app.schemas.expenses import ExpenseCreate, ExpenseRead
-from app.services.expenses import ExpenseService
+from app.api.deps import DbTenant, TenantId
+from app.schemas.expenses import (
+    ExpenseCreate,
+    ExpensePage,
+    ExpenseRead,
+    ExpenseUpdate,
+)
+from app.services import expenses as expenses_service
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
 
-@router.post("", response_model=ExpenseRead, status_code=status.HTTP_201_CREATED)
-def create_expense(
-    data: ExpenseCreate,
-    tenant_id: Annotated[UUID, Depends(get_tenant_id_from_header)],
-    db: Annotated[Session, Depends(get_db_with_tenant)],
-):
-    service = ExpenseService(ExpenseRepository(db), DocumentRepository(db))
-    return service.create_expense(tenant_id, data)
-
-
-@router.get("", response_model=Page[ExpenseRead])
+@router.get("", response_model=ExpensePage)
 def list_expenses(
-    params: Annotated[PageParams, Depends()],
-    db: Annotated[Session, Depends(get_db_with_tenant)],
+    db: DbTenant,
+    tenant_id: TenantId,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
 ):
-    repo = ExpenseRepository(db)
-    items, total = repo.list_paginated(params.offset, params.page_size)
-    pages = math.ceil(total / params.page_size) if total > 0 else 1
-    return Page(
-        items=items,
-        total=total,
-        page=params.page,
-        page_size=params.page_size,
-        total_pages=pages,
-    )
+    return expenses_service.list_expenses(db, tenant_id, page, page_size)
+
+
+@router.post("", response_model=ExpenseRead, status_code=201)
+def create_expense(
+    db: DbTenant,
+    tenant_id: TenantId,
+    payload: ExpenseCreate,
+    idempotency_key: Annotated[str | None, Header()] = None,
+):
+    _ = idempotency_key
+    return expenses_service.create_expense(db, tenant_id, payload)
+
+
+@router.get("/{expense_id}", response_model=ExpenseRead)
+def get_expense(
+    db: DbTenant,
+    tenant_id: TenantId,
+    expense_id: UUID,
+):
+    return expenses_service.get_expense(db, tenant_id, expense_id)
+
+
+@router.patch("/{expense_id}", response_model=ExpenseRead)
+def update_expense(
+    db: DbTenant,
+    tenant_id: TenantId,
+    expense_id: UUID,
+    payload: ExpenseUpdate,
+):
+    return expenses_service.update_expense(db, tenant_id, expense_id, payload)

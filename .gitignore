@@ -33,6 +33,7 @@ service-account*.json
 # Storage de Documentos Local
 storage_data/
 storage/
+var/
 
 # Python Virtual Environments & Caches
 .venv/

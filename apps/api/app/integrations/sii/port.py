@@ -15,8 +15,12 @@ class SIIDtePayload(BaseModel):
 
 class SIIEmissionResult(BaseModel):
     track_id: str
-    sii_receipt_uri: str
-    status: str  # 'accepted', 'rejected', 'pending'
+    sii_receipt_uri: str | None = None
+    status: str  # 'accepted', 'rejected', 'pending', 'issued'
+
+    @property
+    def receipt_uri(self) -> str:
+        return self.sii_receipt_uri
 
 
 class SIIClientPort(Protocol):

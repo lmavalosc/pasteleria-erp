@@ -1,66 +1,98 @@
-import math
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Header, Query
 
-from app.api.deps import get_db_with_tenant, get_tenant_id_from_header
-from app.core.pagination import Page, PageParams
-from app.repositories.accounting import AccountingRepository
+from app.api.deps import DbTenant, TenantId
 from app.schemas.accounting import (
-    AccountCreate,
-    AccountRead,
+    AccountingAccountCreate,
+    AccountingAccountPage,
+    AccountingAccountRead,
+    AccountingAccountUpdate,
     JournalEntryCreate,
+    JournalEntryPage,
     JournalEntryRead,
 )
-from app.services.accounting import AccountingService
+from app.services import accounting as accounting_service
 
 router = APIRouter(prefix="/accounting", tags=["accounting"])
 
 
-@router.get("/accounts", response_model=list[AccountRead])
-def list_accounts(db: Annotated[Session, Depends(get_db_with_tenant)]):
-    repo = AccountingRepository(db)
-    return repo.list_accounts()
+@router.get("/accounts", response_model=AccountingAccountPage)
+def list_accounts(
+    db: DbTenant,
+    tenant_id: TenantId,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
+):
+    return accounting_service.list_accounts(db, tenant_id, page, page_size)
 
 
-@router.post("/accounts", response_model=AccountRead, status_code=status.HTTP_201_CREATED)
+@router.post("/accounts", response_model=AccountingAccountRead, status_code=201)
 def create_account(
-    data: AccountCreate,
-    tenant_id: Annotated[UUID, Depends(get_tenant_id_from_header)],
-    db: Annotated[Session, Depends(get_db_with_tenant)],
+    db: DbTenant,
+    tenant_id: TenantId,
+    payload: AccountingAccountCreate,
+    idempotency_key: Annotated[str | None, Header()] = None,
 ):
-    service = AccountingService(AccountingRepository(db))
-    return service.create_account(tenant_id, data)
+    # Idempotency-key queda preparado para fases posteriores.
+    _ = idempotency_key
+    return accounting_service.create_account(db, tenant_id, payload)
 
 
-@router.post(
-    "/journal-entries",
-    response_model=JournalEntryRead,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_journal_entry(
-    data: JournalEntryCreate,
-    tenant_id: Annotated[UUID, Depends(get_tenant_id_from_header)],
-    db: Annotated[Session, Depends(get_db_with_tenant)],
+@router.get("/accounts/{account_id}", response_model=AccountingAccountRead)
+def get_account(
+    db: DbTenant,
+    tenant_id: TenantId,
+    account_id: UUID,
 ):
-    service = AccountingService(AccountingRepository(db))
-    return service.create_journal_entry(tenant_id, data)
+    return accounting_service.get_account(db, tenant_id, account_id)
 
 
-@router.get("/journal-entries", response_model=Page[JournalEntryRead])
+@router.patch("/accounts/{account_id}", response_model=AccountingAccountRead)
+def update_account(
+    db: DbTenant,
+    tenant_id: TenantId,
+    account_id: UUID,
+    payload: AccountingAccountUpdate,
+):
+    return accounting_service.update_account(db, tenant_id, account_id, payload)
+
+
+@router.get("/journal-entries", response_model=JournalEntryPage)
 def list_journal_entries(
-    params: Annotated[PageParams, Depends()],
-    db: Annotated[Session, Depends(get_db_with_tenant)],
+    db: DbTenant,
+    tenant_id: TenantId,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
 ):
-    repo = AccountingRepository(db)
-    items, total = repo.list_journal_entries_paginated(params.offset, params.page_size)
-    pages = math.ceil(total / params.page_size) if total > 0 else 1
-    return Page(
-        items=items,
-        total=total,
-        page=params.page,
-        page_size=params.page_size,
-        total_pages=pages,
-    )
+    return accounting_service.list_journal_entries(db, tenant_id, page, page_size)
+
+
+@router.post("/journal-entries", response_model=JournalEntryRead, status_code=201)
+def create_journal_entry(
+    db: DbTenant,
+    tenant_id: TenantId,
+    payload: JournalEntryCreate,
+    idempotency_key: Annotated[str | None, Header()] = None,
+):
+    _ = idempotency_key
+    return accounting_service.create_journal_entry(db, tenant_id, payload)
+
+
+@router.get("/journal-entries/{entry_id}", response_model=JournalEntryRead)
+def get_journal_entry(
+    db: DbTenant,
+    tenant_id: TenantId,
+    entry_id: UUID,
+):
+    return accounting_service.get_journal_entry(db, tenant_id, entry_id)
+
+
+@router.post("/journal-entries/{entry_id}/post", response_model=JournalEntryRead)
+def post_journal_entry(
+    db: DbTenant,
+    tenant_id: TenantId,
+    entry_id: UUID,
+):
+    return accounting_service.post_journal_entry(db, tenant_id, entry_id)

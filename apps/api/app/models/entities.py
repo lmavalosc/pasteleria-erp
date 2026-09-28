@@ -3,6 +3,7 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Date,
     DateTime,
@@ -19,6 +20,38 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     pass
+
+
+class TenantMixin:
+    """Añade la clave tenant_id obligatoria a todas las tablas de negocio."""
+
+    tenant_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+
+class CreatedAtMixin:
+    """Marca de tiempo de creación en UTC."""
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+
+class TimestampMixin(CreatedAtMixin):
+    """Marcas de tiempo de creación y actualización en UTC."""
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
 
 class Tenant(Base):
@@ -72,7 +105,7 @@ class User(Base):
     )
 
 
-class Membership(Base):
+class Membership(TenantMixin, CreatedAtMixin, Base):
     __tablename__ = "memberships"
     __table_args__ = (
         UniqueConstraint("tenant_id", "user_id", name="uq_membership_tenant_user"),
@@ -83,11 +116,6 @@ class Membership(Base):
         primary_key=True,
         default=uuid4,
     )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
-    )
     user_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -95,14 +123,8 @@ class Membership(Base):
     )
     role: Mapped[str] = mapped_column(Text, nullable=False, default="member")
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
 
-
-class AccountingAccount(Base):
+class AccountingAccount(TenantMixin, TimestampMixin, Base):
     __tablename__ = "accounting_accounts"
     __table_args__ = (
         UniqueConstraint("tenant_id", "code", name="uq_accounting_account_tenant_code"),
@@ -113,11 +135,6 @@ class AccountingAccount(Base):
         primary_key=True,
         default=uuid4,
     )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
-    )
     parent_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("accounting_accounts.id", ondelete="SET NULL"),
@@ -127,31 +144,14 @@ class AccountingAccount(Base):
     account_type: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
-
-class JournalEntry(Base):
+class JournalEntry(TenantMixin, TimestampMixin, Base):
     __tablename__ = "journal_entries"
 
     id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,
-    )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
     )
     entry_date: Mapped[date] = mapped_column(Date, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -170,36 +170,19 @@ class JournalEntry(Base):
 
     posted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
-
     lines: Mapped[list["JournalLine"]] = relationship(
         back_populates="entry",
         cascade="all, delete-orphan",
     )
 
 
-class JournalLine(Base):
+class JournalLine(TenantMixin, CreatedAtMixin, Base):
     __tablename__ = "journal_lines"
 
     id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,
-    )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
     )
     entry_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -224,27 +207,16 @@ class JournalLine(Base):
     )
     memo: Mapped[str | None] = mapped_column(Text)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-
     entry: Mapped[JournalEntry] = relationship(back_populates="lines")
 
 
-class Document(Base):
+class Document(TenantMixin, CreatedAtMixin, Base):
     __tablename__ = "documents"
 
     id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,
-    )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
     )
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     mime_type: Mapped[str] = mapped_column(Text, nullable=False)
@@ -257,25 +229,14 @@ class Document(Base):
     )
     storage_uri: Mapped[str] = mapped_column(Text, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
 
-
-class Expense(Base):
+class Expense(TenantMixin, TimestampMixin, Base):
     __tablename__ = "expenses"
 
     id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,
-    )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
     )
     expense_date: Mapped[date] = mapped_column(Date, nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
@@ -289,20 +250,8 @@ class Expense(Base):
     description: Mapped[str | None] = mapped_column(Text)
     merchant: Mapped[str | None] = mapped_column(Text)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
-
-class DteInvoice(Base):
+class DteInvoice(TenantMixin, TimestampMixin, Base):
     __tablename__ = "dte_invoices"
     __table_args__ = (
         UniqueConstraint(
@@ -318,11 +267,6 @@ class DteInvoice(Base):
         primary_key=True,
         default=uuid4,
     )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
-    )
     dte_type: Mapped[str] = mapped_column(Text, nullable=False)
     folio: Mapped[int] = mapped_column(Integer, nullable=False)
     issue_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -332,25 +276,13 @@ class DteInvoice(Base):
     recipient_rut: Mapped[str | None] = mapped_column(Text)
     recipient_name: Mapped[str | None] = mapped_column(Text)
 
-    subtotal: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
-    tax_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
-    total: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    subtotal: Mapped[int | None] = mapped_column(BigInteger)
+    tax_amount: Mapped[int | None] = mapped_column(BigInteger)
+    total: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
     sii_receipt_uri: Mapped[str | None] = mapped_column(Text)
     sii_track_id: Mapped[str | None] = mapped_column(Text)
     emitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
 
     items: Mapped[list["DteInvoiceItem"]] = relationship(
         back_populates="invoice",
@@ -358,7 +290,7 @@ class DteInvoice(Base):
     )
 
 
-class DteInvoiceItem(Base):
+class DteInvoiceItem(TenantMixin, CreatedAtMixin, Base):
     __tablename__ = "dte_invoice_items"
     __table_args__ = (
         UniqueConstraint(
@@ -372,11 +304,6 @@ class DteInvoiceItem(Base):
         PG_UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,
-    )
-    tenant_id: Mapped[UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
     )
     dte_invoice_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -401,21 +328,58 @@ class DteInvoiceItem(Base):
         nullable=False,
         default=Decimal("19.00"),
     )
-    tax_amount: Mapped[Decimal] = mapped_column(
-        Numeric(18, 2),
+    tax_amount: Mapped[int] = mapped_column(
+        BigInteger,
         nullable=False,
-        default=Decimal("0.00"),
+        default=0,
     )
-    line_total: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    line_total: Mapped[int] = mapped_column(BigInteger, nullable=False)
     account_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("accounting_accounts.id", ondelete="SET NULL"),
     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
+    invoice: Mapped[DteInvoice] = relationship(back_populates="items")
+
+
+class FolioRange(TenantMixin, CreatedAtMixin, Base):
+    __tablename__ = "folio_ranges"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id",
+            "dte_type",
+            "range_start",
+            name="uq_folio_range_tenant_type_start",
+        ),
     )
 
-    invoice: Mapped[DteInvoice] = relationship(back_populates="items")
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+    dte_type: Mapped[str] = mapped_column(Text, nullable=False)
+    range_start: Mapped[int] = mapped_column(Integer, nullable=False)
+    range_end: Mapped[int] = mapped_column(Integer, nullable=False)
+    next_folio: Mapped[int] = mapped_column(Integer, nullable=False)
+    caf_xml: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+__all__ = [
+    "Base",
+    "TenantMixin",
+    "CreatedAtMixin",
+    "TimestampMixin",
+    "Tenant",
+    "User",
+    "Membership",
+    "AccountingAccount",
+    "JournalEntry",
+    "JournalLine",
+    "Document",
+    "Expense",
+    "DteInvoice",
+    "DteInvoiceItem",
+    "FolioRange",
+]

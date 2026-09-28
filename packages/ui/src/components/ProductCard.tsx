@@ -1,11 +1,25 @@
 import React from 'react';
-import { Product } from '@pasteleria/shared-types';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { PriceTag } from './PriceTag';
 import { RatingStars } from './RatingStars';
 import { Button } from './Button';
 import { theme } from '../theme';
+
+export interface Product {
+  id?: string;
+  name: string;
+  description?: string;
+  tagline?: string;
+  price: number;
+  discountedPrice?: number;
+  images: string[];
+  featured?: boolean;
+  isGlutenFree?: boolean;
+  isVegan?: boolean;
+  rating: number;
+  reviewsCount?: number;
+}
 
 export interface ProductCardProps {
   product: Product;

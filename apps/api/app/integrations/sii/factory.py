@@ -1,3 +1,5 @@
 from app.integrations.sii.adapter import get_sii_client
 
-__all__ = ["get_sii_client"]
+get_sii_adapter = get_sii_client
+
+__all__ = ["get_sii_client", "get_sii_adapter"]

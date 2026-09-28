@@ -11,8 +11,7 @@
       "require": "./src/index.ts",
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./mock-data": "./src/mock-data.ts"
+    }
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -23,7 +22,8 @@
     "clean": "rimraf dist .turbo"
   },
   "dependencies": {
-    "@pasteleria/shared-types": "*",
+    "@hey-api/client-fetch": "^0.13.1",
+    "@pasteleria/shared-types": "workspace:*",
     "openapi-fetch": "^0.17.0"
   },
   "devDependencies": {

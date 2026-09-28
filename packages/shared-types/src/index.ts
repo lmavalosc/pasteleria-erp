@@ -1,15 +1,8 @@
-export * from './products';
-export * from './orders';
-export * from './users';
-export * from './api';
-
-// Export full generated OpenAPI spec contracts
 export type { paths, components, operations } from './openapi';
 export * from './openapi';
 
 // Re-export Schemas from OpenAPI Contract
-import type { components, paths, operations } from './openapi';
-
+import type { components } from './openapi';
 export type Schemas = components['schemas'];
 
 // 1. Tipos Base y Errores
@@ -20,7 +13,6 @@ export type DecimalString = Schemas['DecimalString'];
 export type NonNegativeDecimalString = Schemas['NonNegativeDecimalString'];
 export type ChileanRut = Schemas['ChileanRut'];
 export type ProblemDetail = Schemas['ProblemDetail'];
-export type ProblemDetails = Schemas['ProblemDetail'];
 export type ErrorDetail = Schemas['ErrorDetail'];
 export type PageMeta = Schemas['PageMeta'];
 export type Currency = Schemas['Currency'];
@@ -34,7 +26,6 @@ export type AccountingAccount = Schemas['AccountingAccount'];
 export type AccountingAccountCreate = Schemas['AccountingAccountCreate'];
 export type AccountingAccountUpdate = Schemas['AccountingAccountUpdate'];
 export type AccountingAccountPage = Schemas['AccountingAccountPage'];
-
 export type JournalStatus = Schemas['JournalStatus'];
 export type JournalLine = Schemas['JournalLine'];
 export type JournalLineCreate = Schemas['JournalLineCreate'];
@@ -60,16 +51,3 @@ export type ExpensePage = Schemas['ExpensePage'];
 export type Document = Schemas['Document'];
 export type DocumentUploadRequest = Schemas['DocumentUploadRequest'];
 export type DocumentPage = Schemas['DocumentPage'];
-
-// Compatibilidad
-export type Account = AccountingAccount;
-export type AccountCreateInput = AccountingAccountCreate;
-export type JournalItem = JournalLine;
-export type JournalItemInput = JournalLineCreate;
-export type JournalEntryCreateInput = JournalEntryCreate;
-export type DTE = DteInvoice;
-export type DTECreateInput = DteInvoiceCreate;
-export type ExpenseCreateInput = ExpenseCreate;
-export type DocumentMetadata = Document;
-
-export type HttpMethod = 'get' | 'put' | 'post' | 'delete' | 'options' | 'head' | 'patch' | 'trace';

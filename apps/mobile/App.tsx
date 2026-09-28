@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { getHealth, type HealthResponse } from "@pasteleria/api-client";
 import { api } from "./src/lib/api";
-import { unwrap, ApiError } from "@pasteleria/api-client";
 
 export default function App() {
   const [status, setStatus] = useState("Cargando...");
@@ -9,23 +9,18 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
 
-    api
-      .GET("/health")
+    getHealth({ client: api })
       .then((result) => {
         if (!mounted) return;
 
-        try {
-          const health = unwrap(result);
+        if (result.data) {
+          const health = result.data as unknown as HealthResponse;
           setStatus(`${health.status} — ${health.service} — ${health.version}`);
-        } catch (error) {
-          if (error instanceof ApiError) {
-            setStatus(`Error ${error.status}: ${error.message}`);
-          } else {
-            setStatus(`Error: ${String(error)}`);
-          }
+        } else if (result.error) {
+          setStatus(`Error: ${JSON.stringify(result.error)}`);
         }
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (!mounted) return;
         setStatus(`Excepción: ${String(error)}`);
       });

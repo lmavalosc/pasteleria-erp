@@ -9,13 +9,16 @@ from app.core.errors import DomainError, DomainException
 from app.schemas.common import PageMeta
 
 
-def parse_money(value: str) -> Decimal:
+from typing import Any
+
+
+def parse_money(value: Any) -> Decimal:
     """
-    Convierte un string decimal a Decimal cuantizado a 2 decimales.
+    Convierte un valor monetario (str, int, float, Decimal) a Decimal cuantizado a 2 decimales.
     Lanza DomainError 422 si el formato es inválido.
     """
     try:
-        return Decimal(value).quantize(Decimal("0.01"))
+        return Decimal(str(value)).quantize(Decimal("0.01"))
     except InvalidOperation as exc:
         raise DomainError(
             status_code=422,

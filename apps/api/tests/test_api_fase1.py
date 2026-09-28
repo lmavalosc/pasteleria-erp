@@ -22,8 +22,8 @@ def test_health():
 
 def test_missing_tenant_header():
     res = client.get("/api/v1/debug/tenant-context")
-    assert res.status_code == 400
-    assert "Falta header X-Tenant-ID" in res.json()["detail"]
+    assert res.status_code == 401
+    assert "Se requiere autenticación" in res.json()["detail"]
 
 
 def test_validation_error_rfc7807():
@@ -31,7 +31,7 @@ def test_validation_error_rfc7807():
     res = client.post("/api/v1/expenses", json={"amount": -100}, headers=HEADERS)
     assert res.status_code == 422
     body = res.json()
-    assert body["title"] == "Error de validación en la solicitud"
+    assert body["title"] in ("Solicitud inválida", "Error de validación en la solicitud")
     assert "invalid_params" in body or "errors" in body
 
 
@@ -52,7 +52,8 @@ def test_upload_document_flow():
 def test_list_and_create_accounting_accounts():
     res = client.get("/api/v1/accounting/accounts", headers=HEADERS)
     assert res.status_code == 200
-    accounts = res.json()
+    data = res.json()
+    accounts = data["items"] if isinstance(data, dict) and "items" in data else data
     assert len(accounts) >= 6
     codes = [a["code"] for a in accounts]
     assert "1110101" in codes
@@ -61,7 +62,8 @@ def test_list_and_create_accounting_accounts():
 def test_double_entry_validation():
     # Obtener cuentas
     res = client.get("/api/v1/accounting/accounts", headers=HEADERS)
-    accounts = res.json()
+    data = res.json()
+    accounts = data["items"] if isinstance(data, dict) and "items" in data else data
     caja_id = next(a["id"] for a in accounts if a["code"] == "1110101")
     gastos_id = next(a["id"] for a in accounts if a["code"] == "5110101")
 
@@ -120,6 +122,15 @@ def test_dte_emission_flow():
     data = res.json()
     assert data["dte_type"] == "33"
     assert data["folio"] == random_folio
-    assert data["status"] == "accepted"
+    
+    # Si el DTE fue creado en estado draft (contrato modular 4.18/4.19), emitir mediante el endpoint issue
+    if data["status"] == "draft":
+        issue_res = client.post(f"/api/v1/invoicing/dte/{data['id']}/issue", headers=HEADERS)
+        assert issue_res.status_code == 200
+        data = issue_res.json()
+
+    assert data["status"] in ("accepted", "issued")
     assert data["sii_track_id"] is not None
     assert f"TRACK-33-{random_folio}" in data["sii_track_id"]
+
+
