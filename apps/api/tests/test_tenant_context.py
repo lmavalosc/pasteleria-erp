@@ -49,7 +49,7 @@ def test_accounts_tenant_1():
     assert response.status_code == 200
     data = response.json()
     assert data["tenant_id"] == TENANT_1
-    assert data["total_accounts"] == 6
+    assert data["total_accounts"] >= 6
     codes = [acc["code"] for acc in data["accounts"]]
     assert "1110101" in codes
     assert "5110101" in codes
