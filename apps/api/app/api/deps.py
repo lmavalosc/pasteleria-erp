@@ -1,20 +1,17 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
-from app.core.deps import TenantContext, get_current_context
 
 
 def get_db():
     """
     Abre una sesión SQLAlchemy dentro de una transacción.
-
     SET LOCAL requiere transacción activa -> session.begin() lo garantiza.
-    El commit es automático al salir sin excepción; rollback al salir con excepción.
     """
     with SessionLocal() as session:
         with session.begin():
@@ -22,18 +19,18 @@ def get_db():
 
 
 def get_tenant_id(
-    ctx: Annotated[TenantContext, Depends(get_current_context)],
+    x_tenant_id: Annotated[
+        UUID,
+        Header(
+            alias="X-Tenant-ID",
+            description="Identificador del tenant actual (UUID obligatorio)",
+        ),
+    ],
 ) -> UUID:
     """
-    Extrae tenant_id del contexto autenticado o fallback dev validado.
+    Extrae y valida X-Tenant-ID como UUID obligatorio sin defaults ni fallbacks silenciosos.
     """
-    try:
-        return UUID(ctx.tenant_id)
-    except (ValueError, AttributeError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="X-Tenant-ID debe ser un UUID válido",
-        )
+    return x_tenant_id
 
 
 def get_db_with_tenant(

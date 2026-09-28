@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Header, Path, Query
 
 from app.api.deps import DbTenant, TenantId
 from app.schemas.invoicing import (
@@ -35,19 +35,19 @@ def create_dte(
     return invoicing_service.create_dte_invoice(db, tenant_id, payload)
 
 
-@router.get("/dte/{dte_id}", response_model=DteInvoiceRead)
+@router.get("/dte/{dteId}", response_model=DteInvoiceRead)
 def get_dte(
     db: DbTenant,
     tenant_id: TenantId,
-    dte_id: UUID,
+    dte_id: Annotated[UUID, Path(alias="dteId")],
 ):
     return invoicing_service.get_dte_invoice(db, tenant_id, dte_id)
 
 
-@router.post("/dte/{dte_id}/issue", response_model=DteInvoiceRead)
+@router.post("/dte/{dteId}/issue", response_model=DteInvoiceRead)
 def issue_dte(
     db: DbTenant,
     tenant_id: TenantId,
-    dte_id: UUID,
+    dte_id: Annotated[UUID, Path(alias="dteId")],
 ):
     return invoicing_service.issue_dte_invoice(db, tenant_id, dte_id)

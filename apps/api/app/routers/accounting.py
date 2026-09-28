@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Header, Path, Query
 
 from app.api.deps import DbTenant, TenantId
 from app.schemas.accounting import (
@@ -40,20 +40,20 @@ def create_account(
     return accounting_service.create_account(db, tenant_id, payload)
 
 
-@router.get("/accounts/{account_id}", response_model=AccountingAccountRead)
+@router.get("/accounts/{accountId}", response_model=AccountingAccountRead)
 def get_account(
     db: DbTenant,
     tenant_id: TenantId,
-    account_id: UUID,
+    account_id: Annotated[UUID, Path(alias="accountId")],
 ):
     return accounting_service.get_account(db, tenant_id, account_id)
 
 
-@router.patch("/accounts/{account_id}", response_model=AccountingAccountRead)
+@router.patch("/accounts/{accountId}", response_model=AccountingAccountRead)
 def update_account(
     db: DbTenant,
     tenant_id: TenantId,
-    account_id: UUID,
+    account_id: Annotated[UUID, Path(alias="accountId")],
     payload: AccountingAccountUpdate,
 ):
     return accounting_service.update_account(db, tenant_id, account_id, payload)
@@ -80,19 +80,19 @@ def create_journal_entry(
     return accounting_service.create_journal_entry(db, tenant_id, payload)
 
 
-@router.get("/journal-entries/{entry_id}", response_model=JournalEntryRead)
+@router.get("/journal-entries/{entryId}", response_model=JournalEntryRead)
 def get_journal_entry(
     db: DbTenant,
     tenant_id: TenantId,
-    entry_id: UUID,
+    entry_id: Annotated[UUID, Path(alias="entryId")],
 ):
     return accounting_service.get_journal_entry(db, tenant_id, entry_id)
 
 
-@router.post("/journal-entries/{entry_id}/post", response_model=JournalEntryRead)
+@router.post("/journal-entries/{entryId}/post", response_model=JournalEntryRead)
 def post_journal_entry(
     db: DbTenant,
     tenant_id: TenantId,
-    entry_id: UUID,
+    entry_id: Annotated[UUID, Path(alias="entryId")],
 ):
     return accounting_service.post_journal_entry(db, tenant_id, entry_id)

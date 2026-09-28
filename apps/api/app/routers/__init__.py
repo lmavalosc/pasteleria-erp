@@ -6,13 +6,9 @@ from app.routers.system import router as system_router
 
 from app.routers import (
     accounting,
-    auth,
     documents,
-    dte,
     expenses,
-    inventory,
     invoicing,
-    production,
     system,
 )
 
@@ -23,12 +19,8 @@ __all__ = [
     "expenses_router",
     "documents_router",
     "accounting",
-    "auth",
     "documents",
-    "dte",
     "expenses",
-    "inventory",
     "invoicing",
-    "production",
     "system",
 ]

@@ -48,6 +48,7 @@ class Settings(BaseSettings):
 
     # Autenticación y API
     api_v1_prefix: str = "/api/v1"
+    openapi_url: str = "/api/v1/openapi.json"
     secret_key: str = "supersecretkey_dev_only_change_in_production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24

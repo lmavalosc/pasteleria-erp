@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: ["main", "develop", "fix/**"]
   pull_request:
+    branches: ["main", "develop"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,11 +19,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -30,31 +26,42 @@ jobs:
       - name: Audit Repository Secrets
         run: python scripts/check-secrets.py
 
-  web-and-packages:
-    name: ⚡ Web & Packages (Types, Lint, Build)
+  contract:
+    name: 📜 OpenAPI Contract & Anti-Regression Gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: "pnpm"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      - name: Install PyYAML
+        run: pip install pyyaml
 
       - name: Generate types
-        run: npm run generate:types
+        run: pnpm generate:types
 
-      - name: Build
-        run: npm run build
+      - name: Check generated types
+        run: git diff --exit-code packages/shared-types/src/openapi.ts
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Verify Contract Alignment
+        run: python scripts/check_contract_alignment.py
 
-      - name: Lint
-        run: npm run lint
+      - name: Anti-Regression Gate
+        run: python scripts/check_no_legacy_types.py
 
   api:
     name: 🐍 FastAPI Backend
@@ -74,7 +81,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest httpx "pydantic[email]"
+          pip install pytest httpx
 
       - name: Import app
         env:
@@ -84,4 +91,49 @@ jobs:
       - name: Run Pytest Suite
         env:
           PYTHONPATH: .
-        run: pytest tests/ -v
+        run: pytest -v
+
+  web:
+    name: ⚡ Web & Packages Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Web & Packages
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm type-check
+
+  mobile:
+    name: 📱 Mobile App Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck Mobile
+        run: pnpm --filter @pasteleria/mobile type-check

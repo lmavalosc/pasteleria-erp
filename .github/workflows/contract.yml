@@ -1,29 +1,45 @@
-name: Contract
+name: Contract Alignment & Anti-Regression
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "develop", "fix/**"]
   pull_request:
+    branches: ["main", "develop"]
 
 jobs:
-  openapi:
+  contract:
+    name: 📜 OpenAPI Contract & Types Gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: "pnpm"
 
-      - name: Install dependencies
-        run: npm ci
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Lint OpenAPI
-        run: npm run openapi:lint
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Generate types
-        run: npm run generate:types
+      - name: Install Python YAML parser
+        run: pip install pyyaml
 
-      - name: Check generated types are committed
+      - name: Generate TypeScript types from OpenAPI
+        run: pnpm generate:types
+
+      - name: Check generated types are clean and committed
         run: git diff --exit-code packages/shared-types/src/openapi.ts
+
+      - name: Verify Contract Alignment (FastAPI vs fase1.yaml)
+        run: python scripts/check_contract_alignment.py
+
+      - name: Anti-Regression Gate (No legacy pastry types in active packages)
+        run: python scripts/check_no_legacy_types.py

@@ -12,7 +12,11 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     description="Backend Fase 1: contabilidad, DTE, gastos y documentos.",
-    openapi_url=f"{settings.api_v1_prefix}/openapi.json",
+    servers=[
+        {"url": "http://localhost:8000/api/v1", "description": "Desarrollo local"},
+        {"url": "http://localhost:8000", "description": "Raíz directa"},
+    ],
+    openapi_url=settings.openapi_url,
     docs_url="/docs",
 )
 
@@ -65,26 +69,27 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
     )
 
 
-# --- Routers ERP Fase 1 bajo /api/v1 ---
-app.include_router(system.router, prefix="/api/v1")
-app.include_router(accounting.router, prefix="/api/v1")
-app.include_router(invoicing.router, prefix="/api/v1")
-app.include_router(expenses.router, prefix="/api/v1")
-app.include_router(documents.router, prefix="/api/v1")
-
-# --- Soporte directo sin prefijo para /health y /openapi.json ---
+# --- Routers canónicos Fase 1 (se exponen en el contrato OpenAPI) ---
 app.include_router(system.router)
+app.include_router(accounting.router)
+app.include_router(invoicing.router)
+app.include_router(expenses.router)
+app.include_router(documents.router)
+
+# --- Aliases bajo /api/v1 para clientes HTTP (no duplican en OpenAPI schema) ---
+app.include_router(system.router, prefix="/api/v1", include_in_schema=False)
+app.include_router(accounting.router, prefix="/api/v1", include_in_schema=False)
+app.include_router(invoicing.router, prefix="/api/v1", include_in_schema=False)
+app.include_router(expenses.router, prefix="/api/v1", include_in_schema=False)
+app.include_router(documents.router, prefix="/api/v1", include_in_schema=False)
+
+# --- Aliases bajo /v1 para retrocompatibilidad (no duplican en OpenAPI schema) ---
+app.include_router(accounting.router, prefix="/v1", include_in_schema=False)
+app.include_router(invoicing.router, prefix="/v1", include_in_schema=False)
+app.include_router(expenses.router, prefix="/v1", include_in_schema=False)
+app.include_router(documents.router, prefix="/v1", include_in_schema=False)
 
 
 @app.get("/openapi.json", include_in_schema=False)
 def get_root_openapi():
     return app.openapi()
-
-
-# --- Aliases /v1 para retrocompatibilidad ---
-app.include_router(accounting.router, prefix="/v1")
-app.include_router(invoicing.router, prefix="/v1")
-app.include_router(expenses.router, prefix="/v1")
-app.include_router(documents.router, prefix="/v1")
-
-

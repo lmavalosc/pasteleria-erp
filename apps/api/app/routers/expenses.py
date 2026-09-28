@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Header, Path, Query
 
 from app.api.deps import DbTenant, TenantId
 from app.schemas.expenses import (
@@ -36,20 +36,20 @@ def create_expense(
     return expenses_service.create_expense(db, tenant_id, payload)
 
 
-@router.get("/{expense_id}", response_model=ExpenseRead)
+@router.get("/{expenseId}", response_model=ExpenseRead)
 def get_expense(
     db: DbTenant,
     tenant_id: TenantId,
-    expense_id: UUID,
+    expense_id: Annotated[UUID, Path(alias="expenseId")],
 ):
     return expenses_service.get_expense(db, tenant_id, expense_id)
 
 
-@router.patch("/{expense_id}", response_model=ExpenseRead)
+@router.patch("/{expenseId}", response_model=ExpenseRead)
 def update_expense(
     db: DbTenant,
     tenant_id: TenantId,
-    expense_id: UUID,
+    expense_id: Annotated[UUID, Path(alias="expenseId")],
     payload: ExpenseUpdate,
 ):
     return expenses_service.update_expense(db, tenant_id, expense_id, payload)
